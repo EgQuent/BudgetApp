@@ -77,11 +77,14 @@ class TreeviewEdit(ttk.Treeview):
             self.update_function()
         event.widget.destroy()
 
-    def on_delete_pressed(self, event):
+    def on_delete_pressed(self, event = None):
         selected_id = self.focus()
-        self.delete(selected_id)
-        if self.update_function:
-            self.update_function()
+        if isinstance(selected_id, str):
+            if len(selected_id) == 4:
+                if selected_id[0] == 'I':
+                    self.delete(selected_id)
+                    if self.update_function:
+                        self.update_function()
 
     def on_focus_out(self, event):
         event.widget.destroy()
