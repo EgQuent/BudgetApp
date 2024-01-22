@@ -1,10 +1,11 @@
 import pandas as pd
+import os.path
 import json
 
 
 class BasicModel:
     def __init__(self, file):
-        self.file = file
+        self.file = os.path.join( os.getcwd(), file)
         self.df = None
         self.json = None
 
