@@ -2,11 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesno
 from customTk import TreeviewEdit
+from datetime import datetime
 
 class MainView(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        print("Class MainView init.")
+        parent.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.parent = parent
 
         # Layout
         self.columnconfigure(0, weight=1, uniform='a')
@@ -24,26 +26,29 @@ class MainView(ttk.Frame):
         self.menuView = Menu(self, buttons)
 
     def request_incomes_view(self):
+        self.save_current()
         self.page = SimpleTreeView(self)
         self.controller.request_incomes_view(self.page)
-
+        
     def request_savings_view(self):
-        print("Button savings clicked.")
         self.save_current()
-        self.page = None
 
     def save_current(self):
         if self.page is not None:
             if self.page.save_modification():
                 self.controller.save_view_data()
             self.page.destroy()
-            self.page = None
+        self.page = None
+
+    def on_closing(self):
+        if self.page :
+            self.page.save_modification()
+            self.parent.destroy()
 
 
 class Menu(ttk.Frame):
     def __init__(self, parent, buttons):
         super().__init__(parent)
-        print("Class Menu init.")
         self.grid(row=0,column=0,sticky="nsew")
         for button in buttons:
             if button == "Incomes":
@@ -61,20 +66,21 @@ class SimpleTreeView(ttk.Frame):
         self.page_ctrl = None
         self.tree = None
         self.modified = False
+        self.total = tk.StringVar(self)
         self.grid(row=0,column=1,sticky="nsew")
 
     def set_controller(self, controller):
         self.page_ctrl = controller
         
 
-    def load_view(self, title, columns, rows):
+    def load_view(self, title, columns, rows, total):
         
         # Set title and layout
-        print("Class CSV Tree View init.")
         self.columnconfigure(0, weight=9, uniform='b')
         self.columnconfigure(1, weight=1, uniform='b')
         self.rowconfigure(0, weight=1, uniform='c')
-        self.rowconfigure(1, weight=19, uniform='c')
+        self.rowconfigure(1, weight=18, uniform='c')
+        self.rowconfigure(2, weight=1, uniform='c')
 
         title_label = tk.Label(self, text=SimpleTreeView.titled(title))
         title_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
@@ -92,14 +98,27 @@ class SimpleTreeView(ttk.Frame):
         self.tree.modified = False
         self.tree.pack(fill='both', expand=True)
     
-        # Add buttonnew line
-        add_button = ttk.Button(self, text='+', command= self.add_incomes)
-        add_button.grid(row=1,column=1,sticky="new")
+        # Add buttons frame
+        buttons_frame = ttk.Frame(self)
+        buttons_frame.grid(row=1,column=1,sticky="nsew")
+
+        # Add button new line
+        add_button = ttk.Button(buttons_frame, text='+', command= self.add_incomes)
+        add_button.pack(fill='x', expand=False)
+
+        # Add delete button
+        add_button = ttk.Button(buttons_frame, text='-', command= self.tree.on_delete_pressed)
+        add_button.pack(fill='x', expand=False)
+
+        self.total.set(total)
+        total_label = tk.Label(self, textvariable= self.total)
+        total_label.grid(row=2, column=0, sticky="nse")
 
         self.tree.set_update_function(self.updated_view)
 
     def add_incomes(self):
-        self.tree.insert('', 0)
+        today = datetime.today().strftime("%d/%m/%Y")
+        self.tree.insert('', 0, values=[today, "???", 0.0])
         
     def titled(title):
         if title == "Incomes":

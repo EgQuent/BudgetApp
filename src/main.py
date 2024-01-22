@@ -34,5 +34,5 @@ class App(tk.Tk):
 
 
 if __name__ == '__main__':
-    app = App("Test window")
+    app = App("Py Budget Application")
     app.mainloop()

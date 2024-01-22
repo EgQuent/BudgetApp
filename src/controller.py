@@ -38,7 +38,8 @@ class SimpleTreeViewController:
     def load_data_to_view(self, title):
         columns = list(self.model.df.columns)
         rows = self.model.df.to_numpy().tolist()
-        self.view.load_view(title, columns, rows)
+        total = self.get_total_amount("Montant")
+        self.view.load_view(title, columns, rows, total)
 
     def update_data(self):
         headings = self.view.tree['columns']
@@ -51,13 +52,25 @@ class SimpleTreeViewController:
             for j in range(0, len(rows)):
                 row = rows[j]
                 try:
+                    col.append(float(row[i]))
+                except ValueError:
                     col.append(row[i])
                 except IndexError:
                     col.append('')
             data[headings[i]] = col
         self.model.df = pd.DataFrame(data)
+        # print(self.model.df.head(4))
+        self.view.total.set(self.get_total_amount("Montant"))
 
     
     def save_data(self):
         self.update_data()
         self.model.save_file(self.model.df)
+
+    def get_total_amount(self, key):
+        sum = self.get_string_amount(key)
+        return "Total = " + str(sum) + " €"
+
+    def get_string_amount(self, key):
+        sum = self.model.df[key].sum()
+        return '{:,}'.format(round(sum,2)).replace(',', ' ')
