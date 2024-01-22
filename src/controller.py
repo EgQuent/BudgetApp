@@ -18,13 +18,6 @@ class Controller:
     def request_incomes_view(self, page_view):
         obj_data = self.model.json[str('Incomes')]
         self.page_ctrl = SimpleTreeViewController(obj_data, page_view, 'Incomes')
-
-    # def get_vm(self, request):
-    #     obj_data = self.model.json[str(request)]
-    #     print(obj_data)
-    #     if request == "Incomes":
-    #         self.crt_ctrl = SimpleTreeViewController(obj_data)
-    #         return self.crt_ctrl.get_data()
         
     def save_view_data(self):
         self.crt_ctrl.save_data(self.view.page)

@@ -8,6 +8,7 @@ class TreeviewEdit(ttk.Treeview):
         self.parent = parent
         self.update_function = None
         self.bind("<Double-Button-1>", self.on_double_click)
+        self.bind("<Delete>", self.on_delete_pressed)
 
     def set_update_function(self, update_function):
         self.update_function = update_function
@@ -75,6 +76,12 @@ class TreeviewEdit(ttk.Treeview):
         if self.update_function:
             self.update_function()
         event.widget.destroy()
+
+    def on_delete_pressed(self, event):
+        selected_id = self.focus()
+        self.delete(selected_id)
+        if self.update_function:
+            self.update_function()
 
     def on_focus_out(self, event):
         event.widget.destroy()
