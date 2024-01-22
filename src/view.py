@@ -1,14 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesno
-from CustomTk import TreeviewEdit
+from customTk import TreeviewEdit
 
 class MainView(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         print("Class MainView init.")
 
-        # Create grid for sidebar and main content
+        # Layout
         self.columnconfigure(0, weight=1, uniform='a')
         self.columnconfigure(1, weight=9, uniform='a')
         self.rowconfigure(0, weight=1)
@@ -17,25 +17,20 @@ class MainView(ttk.Frame):
         self.menuView = None
         self.page = None
 
+    def set_controller(self, controller):
+        self.controller = controller
+
     def load_menu_view(self, buttons):
         self.menuView = Menu(self, buttons)
 
-    def load_incomes_view(self):
-        print("Button incomes clicked.")
-        self.save_current()
-        df = self.controller.get_vm('Incomes')
-        self.page = SimpleTreeView(self, 'Incomes', df)
-        #self.view.create_treeview_page(list(self.model.df.columns), self.model.df.to_numpy().tolist())
+    def request_incomes_view(self):
+        self.page = SimpleTreeView(self)
+        self.controller.request_incomes_view(self.page)
 
-    def load_savings_view(self):
+    def request_savings_view(self):
         print("Button savings clicked.")
         self.save_current()
-        self.controller.get_vm('Savings')
         self.page = None
-
-    def set_controller(self, controller):
-        print("Class MainView set_controller.")
-        self.controller = controller
 
     def save_current(self):
         if self.page is not None:
@@ -52,25 +47,29 @@ class Menu(ttk.Frame):
         self.grid(row=0,column=0,sticky="nsew")
         for button in buttons:
             if button == "Incomes":
-                income_button = ttk.Button(self,text='Revenus', command=parent.load_incomes_view)
+                income_button = ttk.Button(self,text='Revenus', command=parent.request_incomes_view)
                 income_button.pack(expand=False, fill="x")
             elif button == "Savings":
-                savings_button = ttk.Button(self,text='Epargnes', command=parent.load_savings_view)
+                savings_button = ttk.Button(self,text='Epargnes', command=parent.request_savings_view)
                 savings_button.pack(expand=False, fill="x")
         ttk.Label(self, background="grey").pack(expand=True, fill="both")
 
 class SimpleTreeView(ttk.Frame):
-    def __init__(self, parent, title, data):
+    def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
+        self.page_ctrl = None
         self.tree = None
+        self.modified = False
         self.grid(row=0,column=1,sticky="nsew")
-        self.init_view(title, data)
+
+    def set_controller(self, controller):
+        self.page_ctrl = controller
         
 
-    def init_view(self, title, data):
-        columns = list(data.columns)
-        rows = data.to_numpy().tolist()
+    def load_view(self, title, columns, rows):
+        
+        # Set title and layout
         print("Class CSV Tree View init.")
         self.columnconfigure(0, weight=9, uniform='b')
         self.columnconfigure(1, weight=1, uniform='b')
@@ -83,6 +82,7 @@ class SimpleTreeView(ttk.Frame):
         data_frame = ttk.Frame(self)
         data_frame.grid(row=1,column=0,sticky="nsew")
         
+        # Create TreeView
         self.tree = TreeviewEdit(data_frame, columns=columns, show='headings')
         for column in self.tree['columns']:
             self.tree.heading(column, text=column)
@@ -92,20 +92,27 @@ class SimpleTreeView(ttk.Frame):
         self.tree.modified = False
         self.tree.pack(fill='both', expand=True)
     
+        # Add buttonnew line
         add_button = ttk.Button(self, text='+', command= self.add_incomes)
         add_button.grid(row=1,column=1,sticky="new")
 
+        self.tree.set_update_function(self.updated_view)
+
     def add_incomes(self):
-        print("Adding incomes.")
         self.tree.insert('', 0)
         
     def titled(title):
         if title == "Incomes":
             return "Revenus"
+        
+    def updated_view(self):
+        self.modified = True
+        self.page_ctrl.update_data()
     
     def save_modification(self):
-        if self.tree.modified :
-            return askyesno("Sauvegarder ?", "Voulez-vous sauvez les modifications ?")
+        if self.modified:
+            if askyesno("Sauvegarder ?", "Voulez-vous sauvez les modifications ?"):
+                self.page_ctrl.save_data()
 
 
 

@@ -6,11 +6,16 @@ class TreeviewEdit(ttk.Treeview):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
-        self.modified = False
+        self.update_function = None
         self.bind("<Double-Button-1>", self.on_double_click)
+        self.bind("<Delete>", self.on_delete_pressed)
+
+    def set_update_function(self, update_function):
+        self.update_function = update_function
 
     def insert(self, *args, **kwargs):
-        self.modified = True
+        if self.update_function:
+            self.update_function()
         return super().insert(*args, **kwargs)
 
     def on_double_click(self, event):
@@ -68,8 +73,15 @@ class TreeviewEdit(ttk.Treeview):
             current_values = self.item(selected_id).get("values")
             current_values[column_index] = new_text
             self.item(selected_id, values=current_values)
-        self.modified = True
+        if self.update_function:
+            self.update_function()
         event.widget.destroy()
+
+    def on_delete_pressed(self, event):
+        selected_id = self.focus()
+        self.delete(selected_id)
+        if self.update_function:
+            self.update_function()
 
     def on_focus_out(self, event):
         event.widget.destroy()
