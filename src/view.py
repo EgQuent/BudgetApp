@@ -4,26 +4,47 @@ from tkinter.messagebox import askyesno
 from customTk import TreeviewEdit
 from datetime import datetime
 
-class MainView(ttk.Frame):
+class BasicView(ttk.Frame):
+
     def __init__(self, parent):
         super().__init__(parent)
-        parent.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.parent = parent
-
-        # Layout
-        self.columnconfigure(0, weight=1, uniform='a')
-        self.columnconfigure(1, weight=9, uniform='a')
-        self.rowconfigure(0, weight=1)
-
+        self.page = None
         self.controller = None
-        self.menuView = None
+
+    def save_current(self):
+        if self.page is not None:
+            if self.page.save_modification():
+                self.controller.save_view_data()
+            self.page.destroy()
         self.page = None
 
     def set_controller(self, controller):
         self.controller = controller
 
-    def load_menu_view(self, buttons):
-        self.menuView = Menu(self, buttons)
+    def on_closing(self):
+        if self.page :
+            self.page.save_modification()
+            self.parent.destroy()
+
+    def load_view(self):
+        pass
+
+
+class MainView(BasicView):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        parent.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.parent = parent
+        self.menuView = None
+
+    def load_view(self, buttons):
+        self.columnconfigure(0, weight=1, uniform='a')
+        self.columnconfigure(1, weight=9, uniform='a')
+        self.rowconfigure(0, weight=1)
+        self.menuView = Menu(self)
+        self.menuView.load_view(buttons)
 
     def request_incomes_view(self):
         self.save_current()
@@ -33,48 +54,55 @@ class MainView(ttk.Frame):
     def request_savings_view(self):
         self.save_current()
 
-    def save_current(self):
-        if self.page is not None:
-            if self.page.save_modification():
-                self.controller.save_view_data()
-            self.page.destroy()
-        self.page = None
 
-    def on_closing(self):
-        if self.page :
-            self.page.save_modification()
-            self.parent.destroy()
+class Menu(BasicView):
 
-
-class Menu(ttk.Frame):
-    def __init__(self, parent, buttons):
-        super().__init__(parent)
+    def load_view(self, buttons):
         self.grid(row=0,column=0,sticky="nsew")
         for button in buttons:
             if button == "Incomes":
-                income_button = ttk.Button(self,text='Revenus', command=parent.request_incomes_view)
+                income_button = ttk.Button(self,text='Revenus', command=self.parent.request_incomes_view)
                 income_button.pack(expand=False, fill="x")
             elif button == "Savings":
-                savings_button = ttk.Button(self,text='Epargnes', command=parent.request_savings_view)
+                savings_button = ttk.Button(self,text='Epargnes', command=self.parent.request_savings_view)
                 savings_button.pack(expand=False, fill="x")
         ttk.Label(self, background="grey").pack(expand=True, fill="both")
 
-class SimpleTreeView(ttk.Frame):
+class BasicPage(BasicView):
+    
     def __init__(self, parent):
         super().__init__(parent)
-        self.parent = parent
-        self.page_ctrl = None
-        self.tree = None
         self.modified = False
-        self.total = tk.StringVar(self)
-        self.grid(row=0,column=1,sticky="nsew")
 
-    def set_controller(self, controller):
-        self.page_ctrl = controller
+    def titled(title):
+        if title == "Incomes":
+            return "Revenus"
+        elif title == "Savings":
+            return "Epargne"
+        elif title == "Cars":
+            return "Voitures"
         
+    def updated_view(self):
+        self.modified = True
+        self.controller.update_data()
+    
+    def save_modification(self):
+        if self.modified:
+            if askyesno("Sauvegarder ?", "Voulez-vous sauvez les modifications ?"):
+                self.controller.save_data()
+
+
+class SimpleTreeView(BasicPage):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.tree = None
+        self.total = tk.StringVar(self)
+  
 
     def load_view(self, title, columns, rows, total):
-        
+        self.grid(row=0,column=1,sticky="nsew")   
+
         # Set title and layout
         self.columnconfigure(0, weight=9, uniform='b')
         self.columnconfigure(1, weight=1, uniform='b')
@@ -119,19 +147,6 @@ class SimpleTreeView(ttk.Frame):
     def add_incomes(self):
         today = datetime.today().strftime("%d/%m/%Y")
         self.tree.insert('', 0, values=[today, "???", 0.0])
-        
-    def titled(title):
-        if title == "Incomes":
-            return "Revenus"
-        
-    def updated_view(self):
-        self.modified = True
-        self.page_ctrl.update_data()
-    
-    def save_modification(self):
-        if self.modified:
-            if askyesno("Sauvegarder ?", "Voulez-vous sauvez les modifications ?"):
-                self.page_ctrl.save_data()
 
 
 
