@@ -21,6 +21,7 @@ class App(tk.Tk):
 
         # create a view and place it on the root window
         view = MainView(self)
+        self.protocol("WM_DELETE_WINDOW", view.on_closing)
         view.pack(expand=True, fill="both")
 
         # create a controller
