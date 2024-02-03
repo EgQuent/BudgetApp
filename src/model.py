@@ -74,7 +74,7 @@ class Reader:
 
 class BasicModel():
 
-    KEYS = ['Incomes, Savings, Cars']
+    KEYS = ['Incomes', 'Savings', 'Cars']
 
     def __init__(self, file):
         self.file = file
@@ -105,8 +105,19 @@ class BasicModel():
                 tables[car]['cost'] = self._load(self.data['Cars'], car, 'cost_file')
                 tables[car]['kms'] = self._load(self.data['Cars'], car, 'km_file')
             return tables
+        
+    def __repr__(self):
+        return f"""
+BasicModel
+data= {self.data}
+incomes_table= {self.incomes_table}
+savings_table= {self.savings_table}
+cars= {self.cars}
+cars_tables= {self.cars_tables}
+"""
 
-
+class Model(BasicModel):
+    """With setters ans getters"""
 
 
     

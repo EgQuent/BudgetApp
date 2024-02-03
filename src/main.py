@@ -23,14 +23,15 @@ class App(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", view.on_closing)
         view.pack(expand=True, fill="both")
 
-        # # create a controller
-        # controller = Controller(model, view)
+        # create a controller
+        controller = Controller(model, view)
+        print(controller.model)
 
-        # # set the controller to view
-        # view.set_controller(controller)
+        # set the controller to view
+        view.set_controller(controller)
 
-        # #start controller
-        # controller.start()
+        # start controller
+        controller.start()
 
     @classmethod
     def set_window(cls):
@@ -39,4 +40,4 @@ class App(tk.Tk):
 
 if __name__ == '__main__':
     app = App("Py Budget Application")
-    # app.mainloop()
+    app.mainloop()

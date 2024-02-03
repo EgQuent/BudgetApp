@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter.messagebox import askyesno
 from customTk import TreeviewEdit
 from datetime import datetime
+from copy import deepcopy
 
 class BasicView(ttk.Frame):
 
@@ -60,14 +61,17 @@ class MainView(BasicView):
 class Menu(BasicView):
 
     def load_view(self, buttons):
+        buttons_to_print = deepcopy(buttons)
         self.grid(row=0,column=0,sticky="nsew")
-        for button in buttons:
-            if button == "Incomes":
+        for _ in range(len(buttons_to_print)):
+            if "Incomes" in buttons_to_print:
                 income_button = ttk.Button(self,text='Revenus', command=self.parent.request_incomes_view)
                 income_button.pack(expand=False, fill="x")
-            elif button == "Savings":
+                buttons_to_print.remove('Incomes')
+            elif "Savings" in buttons_to_print:
                 savings_button = ttk.Button(self,text='Epargnes', command=self.parent.request_savings_view)
                 savings_button.pack(expand=False, fill="x")
+                buttons_to_print.remove('Savings')
         ttk.Label(self, background="grey").pack(expand=True, fill="both")
 
 class BasicPage(BasicView):

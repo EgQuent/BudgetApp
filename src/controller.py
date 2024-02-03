@@ -13,25 +13,25 @@ class BasicController:
 
 class Controller(BasicController):
 
+    AKEY = 'Montant'
+
     def __init__(self, model, view):
         super().__init__(model, view)
         self.page_ctrl = None
 
     def start(self):
-        buttons = list(self.model.json.keys())
+        buttons = list(self.model.data.keys())
         self.view.load_view(buttons)
 
     def request_incomes_view(self, page_view):
-        obj_data = self.model.json[str('Incomes')]
-        self.page_ctrl = SimpleTreeViewController(obj_data['file'], page_view)
+        self.page_ctrl = SimpleTreeViewController(self.model, page_view)
         page_view.set_controller(self.page_ctrl)
-        self.page_ctrl.start("Montant")
+        self.page_ctrl.start(self.AKEY)
 
     def request_savings_view(self, page_view):
-        obj_data = self.model.json[str('Savings')]
-        self.page_ctrl = SavingsController(obj_data['file'], page_view)
+        self.page_ctrl = SavingsController(self.model, page_view)
         page_view.set_controller(self.page_ctrl)
-        self.page_ctrl.start("Montant")
+        self.page_ctrl.start(self.AKEY)
 
 class PageController(BasicController):
 
