@@ -85,7 +85,8 @@ class SimpleTreeViewController(PageController):
     def get_total(self, key):
         return round(float(self.model.df[key].sum()), 2)
 
-    def get_string_amount(self, value):
+    @staticmethod
+    def get_string_amount(value):
         return '{:,}'.format(value).replace(',', ' ')
     
     def get_total_string(self, sum):

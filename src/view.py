@@ -78,7 +78,8 @@ class BasicPage(BasicView):
         self.modified = False
         self.grid(row=0,column=1,sticky="nsew")   
 
-    def titled(self, title):
+    @staticmethod
+    def titled(title):
         if title == "Incomes":
             return "Revenus"
         elif title == "Savings":

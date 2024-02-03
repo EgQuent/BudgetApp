@@ -29,6 +29,10 @@ class App(tk.Tk):
         #start controller
         controller.start()
 
+    @classmethod
+    def set_window(cls):
+        pass
+
 
 if __name__ == '__main__':
     app = App("Py Budget Application")
