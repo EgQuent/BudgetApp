@@ -1,15 +1,8 @@
-import os.path
-from copy import deepcopy
 import pandas as pd
-from model import BasicModel
 
 class BasicController:
-    def __init__(self, data_file, view):
-        try :
-            self.model = BasicModel(data_file)
-            self.model.open_file()
-        except :
-            print("Cannot load table.")
+    def __init__(self, model, view):
+        self.model = model
         self.view = view
 
     def start(self):
@@ -17,31 +10,31 @@ class BasicController:
 
 class Controller(BasicController):
 
-    def __init__(self, data_file, view):
-        super().__init__(data_file, view)
+    AKEY = 'Montant'
+
+    def __init__(self, model, view):
+        super().__init__(model, view)
         self.page_ctrl = None
 
     def start(self):
-        buttons = list(self.model.json.keys())
+        buttons = list(self.model.data.keys())
         self.view.load_view(buttons)
 
     def request_incomes_view(self, page_view):
-        obj_data = self.model.json[str('Incomes')]
-        self.page_ctrl = SimpleTreeViewController(obj_data['file'], page_view)
+        self.page_ctrl = SimpleTreeViewController(self.model, page_view)
         page_view.set_controller(self.page_ctrl)
-        self.page_ctrl.start("Montant")
+        self.page_ctrl.start(self.AKEY)
 
     def request_savings_view(self, page_view):
-        obj_data = self.model.json[str('Savings')]
-        self.page_ctrl = SavingsController(obj_data['file'], page_view)
+        self.page_ctrl = SavingsController(self.model, page_view)
         page_view.set_controller(self.page_ctrl)
-        self.page_ctrl.start("Montant")
+        self.page_ctrl.start(self.AKEY)
 
 class PageController(BasicController):
 
     def save_data(self):
         self.update_data()
-        self.model.save_file(self.model.df)
+        self.model.save()
 
     def update_data(self):
         pass
@@ -49,12 +42,13 @@ class PageController(BasicController):
 
 class SimpleTreeViewController(PageController):
 
-    def __init__(self, data_file, page_view):
-        super().__init__(data_file, page_view)
+    def __init__(self, model, page_view):
+        super().__init__(model, page_view)
+        self.table = self.model.incomes_table
 
     def start(self, key):
-        columns = list(self.model.df.columns)
-        rows = self.model.df.to_numpy().tolist()
+        columns = list(self.table.columns)
+        rows = self.table.to_numpy().tolist()
         sum = self.get_total(key)
         total = self.get_total_string(sum)
         self.view.total.set(total)
@@ -77,15 +71,19 @@ class SimpleTreeViewController(PageController):
                 except IndexError:
                     col.append('')
             data[headings[i]] = col
-        self.model.df = pd.DataFrame(data)
-        # print(self.model.df.head(4))
+        self.table = pd.DataFrame(data)
         sum = self.get_total("Montant")
         self.view.total.set(self.get_total_string(sum))
+        self.update_model()
+
+    def update_model(self):
+        self.model.incomes_table = self.table
 
     def get_total(self, key):
-        return round(float(self.model.df[key].sum()), 2)
+        return round(float(self.table[key].sum()), 2)
 
-    def get_string_amount(self, value):
+    @staticmethod
+    def get_string_amount(value):
         return '{:,}'.format(value).replace(',', ' ')
     
     def get_total_string(self, sum):

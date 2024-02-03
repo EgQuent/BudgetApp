@@ -1,7 +1,7 @@
 import tkinter as tk
 from view import MainView
 from controller import Controller
-from model import BasicModel
+from model import Model
 
 class App(tk.Tk):
 
@@ -15,19 +15,29 @@ class App(tk.Tk):
         self.geometry(f"{self.STD_SIZE_X}x{self.STD_SIZE_Y}")
         self.minsize(self.STD_SIZE_X, self.STD_SIZE_Y)
 
+        # create a controller
+        model = Model(self.DATA_FILE)
+
         # create a view and place it on the root window
         view = MainView(self)
         self.protocol("WM_DELETE_WINDOW", view.on_closing)
         view.pack(expand=True, fill="both")
 
         # create a controller
-        controller = Controller(self.DATA_FILE, view)
+        controller = Controller(model, view)
+        print(controller.model)
 
         # set the controller to view
         view.set_controller(controller)
 
-        #start controller
+        # start controller
         controller.start()
+
+        print("END")
+
+    @classmethod
+    def set_window(cls):
+        pass
 
 
 if __name__ == '__main__':
