@@ -61,17 +61,16 @@ class MainView(BasicView):
 class Menu(BasicView):
 
     def load_view(self, buttons):
-        buttons_to_print = deepcopy(buttons)
         self.grid(row=0,column=0,sticky="nsew")
-        for _ in range(len(buttons_to_print)):
-            if "Incomes" in buttons_to_print:
+        for _ in range(len(buttons)):
+            if "Incomes" in buttons:
                 income_button = ttk.Button(self,text='Revenus', command=self.parent.request_incomes_view)
                 income_button.pack(expand=False, fill="x")
-                buttons_to_print.remove('Incomes')
-            elif "Savings" in buttons_to_print:
+                buttons.remove('Incomes')
+            elif "Savings" in buttons:
                 savings_button = ttk.Button(self,text='Epargnes', command=self.parent.request_savings_view)
                 savings_button.pack(expand=False, fill="x")
-                buttons_to_print.remove('Savings')
+                buttons.remove('Savings')
         ttk.Label(self, background="grey").pack(expand=True, fill="both")
 
 class BasicPage(BasicView):

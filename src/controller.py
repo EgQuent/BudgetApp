@@ -1,7 +1,4 @@
-import os.path
-from copy import deepcopy
 import pandas as pd
-from model import BasicModel
 
 class BasicController:
     def __init__(self, model, view):

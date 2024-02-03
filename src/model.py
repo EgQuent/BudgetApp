@@ -1,12 +1,13 @@
 import pandas as pd
 import os.path
 import json
+from copy import deepcopy
 
 class Reader:
 
     AKEY = 'Montant'
 
-    def __init__(self, file):
+    def __init__(self, file: str):
         self.file = os.path.join(os.getcwd(), file)
 
     def open_file(self):
@@ -72,18 +73,15 @@ class Reader:
         with open(self.file, 'w') as json_file:
             json.dump(data, json_file)
 
-class BasicModel():
+class BasicModel:
+    """Abstract Model"""
 
-    KEYS = ['Incomes', 'Savings', 'Cars']
+    KEYS = []
 
-    def __init__(self, file):
+    def __init__(self, file: str):
         self.file = file
         self.data = Reader(self.file).open_file()
         self._check_data()
-        self.incomes_table = self._load(self.data, 'Incomes')
-        self.savings_table = self._load(self.data, 'Savings')
-        self.cars = list(self.data['Cars'].keys())
-        self.cars_tables = self._load_cars()
 
     def _check_data(self):
         for key in self.KEYS:
@@ -97,6 +95,26 @@ class BasicModel():
         except KeyError as error:
             print(f"Error parsing dict : {error}")
 
+    def __getattr__(self, name: str):
+        "Returned object is a copy. Original cannot be modified."
+        return deepcopy(self.__dict__[name])
+
+    def __setattr__(self, name: str, value):
+        "Modified the object with a copy, avoiding any link between the two objects."
+        self.__dict__[name] = deepcopy(value)
+
+
+class Model(BasicModel):
+
+    KEYS = ['Incomes', 'Savings', 'Cars']
+
+    def __init__(self, file: str):
+        super().__init__(file)
+        self.incomes_table = self._load(self.data, 'Incomes')
+        self.savings_table = self._load(self.data, 'Savings')
+        self.cars = list(self.data['Cars'].keys())
+        self.cars_tables = self._load_cars()
+
     def _load_cars(self):
         if self.cars:
             tables = {}
@@ -108,16 +126,13 @@ class BasicModel():
         
     def __repr__(self):
         return f"""
-BasicModel
-data= {self.data}
-incomes_table= {self.incomes_table}
-savings_table= {self.savings_table}
-cars= {self.cars}
-cars_tables= {self.cars_tables}
-"""
-
-class Model(BasicModel):
-    """With setters ans getters"""
+            BasicModel
+            data= {self.data}
+            incomes_table= {self.incomes_table}
+            savings_table= {self.savings_table}
+            cars= {self.cars}
+            cars_tables= {self.cars_tables}
+        """
 
 
     

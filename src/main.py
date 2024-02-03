@@ -1,7 +1,7 @@
 import tkinter as tk
 from view import MainView
 from controller import Controller
-from model import BasicModel
+from model import Model
 
 class App(tk.Tk):
 
@@ -16,7 +16,7 @@ class App(tk.Tk):
         self.minsize(self.STD_SIZE_X, self.STD_SIZE_Y)
 
         # create a controller
-        model = BasicModel(self.DATA_FILE)
+        model = Model(self.DATA_FILE)
 
         # create a view and place it on the root window
         view = MainView(self)
@@ -32,6 +32,8 @@ class App(tk.Tk):
 
         # start controller
         controller.start()
+
+        print("END")
 
     @classmethod
     def set_window(cls):
