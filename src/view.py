@@ -48,11 +48,13 @@ class MainView(BasicView):
 
     def request_incomes_view(self):
         self.save_current()
-        self.page = SimpleTreeView(self)
+        self.page = SimpleTreeView(self, "Incomes")
         self.controller.request_incomes_view(self.page)
         
     def request_savings_view(self):
         self.save_current()
+        self.page = SavingsView(self, "Savings")
+        self.controller.request_savings_view(self.page)
 
 
 class Menu(BasicView):
@@ -70,11 +72,13 @@ class Menu(BasicView):
 
 class BasicPage(BasicView):
     
-    def __init__(self, parent):
+    def __init__(self, parent, title):
         super().__init__(parent)
+        self.title = tk.Label(self, text=self.titled(title))
         self.modified = False
+        self.grid(row=0,column=1,sticky="nsew")   
 
-    def titled(title):
+    def titled(self, title):
         if title == "Incomes":
             return "Revenus"
         elif title == "Savings":
@@ -94,24 +98,25 @@ class BasicPage(BasicView):
 
 class SimpleTreeView(BasicPage):
 
-    def __init__(self, parent):
-        super().__init__(parent)
+    def __init__(self, parent, title):
+        super().__init__(parent, title)
         self.tree = None
-        self.total = tk.StringVar(self)
-  
+        self.total = tk.StringVar(self, "- €")
+        self.init_layout()
 
-    def load_view(self, title, columns, rows, total):
-        self.grid(row=0,column=1,sticky="nsew")   
-
-        # Set title and layout
+    def init_layout(self):
         self.columnconfigure(0, weight=9, uniform='b')
         self.columnconfigure(1, weight=1, uniform='b')
         self.rowconfigure(0, weight=1, uniform='c')
         self.rowconfigure(1, weight=18, uniform='c')
         self.rowconfigure(2, weight=1, uniform='c')
 
-        title_label = tk.Label(self, text=SimpleTreeView.titled(title))
+        title_label = tk.Label(self, text=self.titled(self.title))
         title_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+
+  
+
+    def load_view(self, columns, rows):
 
         data_frame = ttk.Frame(self)
         data_frame.grid(row=1,column=0,sticky="nsew")
@@ -120,7 +125,7 @@ class SimpleTreeView(BasicPage):
         self.tree = TreeviewEdit(data_frame, columns=columns, show='headings')
         for column in self.tree['columns']:
             self.tree.heading(column, text=column)
-            self.tree.column(column, width=100)
+            self.tree.column(column, width=50)
         for row in rows:
             self.tree.insert('', tk.END, values=row)
         self.tree.modified = False
@@ -138,7 +143,6 @@ class SimpleTreeView(BasicPage):
         add_button = ttk.Button(buttons_frame, text='-', command= self.tree.on_delete_pressed)
         add_button.pack(fill='x', expand=False)
 
-        self.total.set(total)
         total_label = tk.Label(self, textvariable= self.total)
         total_label.grid(row=2, column=0, sticky="nse")
 
@@ -147,6 +151,47 @@ class SimpleTreeView(BasicPage):
     def add_incomes(self):
         today = datetime.today().strftime("%d/%m/%Y")
         self.tree.insert('', 0, values=[today, "???", 0.0])
+
+class SavingsView(SimpleTreeView):
+
+    def __init__(self, parent, title):
+        super().__init__(parent, title)
+        self.rate = tk.IntVar(self, 35)
+        self.saved = tk.StringVar(self, "- €")
+        self.balance = tk.StringVar(self, "- €")
+
+    def init_layout(self):
+        self.columnconfigure(0, weight=8, uniform='b')
+        self.columnconfigure(1, weight=1, uniform='b')
+        self.columnconfigure(2, weight=3, uniform='b')
+        self.rowconfigure(0, weight=1, uniform='c')
+        self.rowconfigure(1, weight=18, uniform='c')
+        self.rowconfigure(2, weight=1, uniform='c')
+
+        title_label = tk.Label(self, text=self.titled(self.title))
+        title_label.grid(row=0, column=0, columnspan=3, sticky="nsew")
+
+    def load_view(self, columns, rows):
+        super().load_view(columns, rows)
+
+        balance_frame = ttk.Frame(self)
+        balance_frame.grid(row=1,column=2, rowspan=2, sticky="nsew")
+
+        total_rev_label = tk.Label(balance_frame, textvariable= self.total)
+        total_rev_label.pack(fill='x', expand=False)
+
+        rate_frame = ttk.Frame(balance_frame)
+        rate_label = tk.Label(rate_frame, text="Taux d'epargne = ")
+        rate_entry = ttk.Entry(rate_frame, textvariable= self.rate)
+        rate_label.pack(side="left")
+        rate_entry.pack(side="left")
+        rate_frame.pack(fill='x', expand=False)
+
+        total_saved_label = tk.Label(balance_frame, textvariable= self.saved)
+        total_saved_label.pack(fill='x', expand=False)
+
+        balance_label = tk.Label(balance_frame, textvariable= self.balance)
+        balance_label.pack(fill='x', expand=False)
 
 
 
