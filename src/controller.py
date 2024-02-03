@@ -27,9 +27,15 @@ class Controller(BasicController):
 
     def request_incomes_view(self, page_view):
         obj_data = self.model.json[str('Incomes')]
-        self.page_ctrl = SimpleTreeViewController(obj_data['file'], page_view, 'Incomes')
+        self.page_ctrl = SimpleTreeViewController(obj_data['file'], page_view)
         page_view.set_controller(self.page_ctrl)
-        self.page_ctrl.start("Incomes")
+        self.page_ctrl.start("Montant")
+
+    def request_savings_view(self, page_view):
+        obj_data = self.model.json[str('Savings')]
+        self.page_ctrl = SavingsController(obj_data['file'], page_view)
+        page_view.set_controller(self.page_ctrl)
+        self.page_ctrl.start("Montant")
 
 class PageController(BasicController):
 
@@ -43,14 +49,16 @@ class PageController(BasicController):
 
 class SimpleTreeViewController(PageController):
 
-    def __init__(self, data_file, page_view, title):
+    def __init__(self, data_file, page_view):
         super().__init__(data_file, page_view)
 
-    def start(self, title):
+    def start(self, key):
         columns = list(self.model.df.columns)
         rows = self.model.df.to_numpy().tolist()
-        total = self.get_total_amount("Montant")
-        self.view.load_view(title, columns, rows, total)
+        sum = self.get_total(key)
+        total = self.get_total_string(sum)
+        self.view.total.set(total)
+        self.view.load_view(columns, rows)
 
     def update_data(self):
         headings = self.view.tree['columns']
@@ -71,12 +79,18 @@ class SimpleTreeViewController(PageController):
             data[headings[i]] = col
         self.model.df = pd.DataFrame(data)
         # print(self.model.df.head(4))
-        self.view.total.set(self.get_total_amount("Montant"))
+        sum = self.get_total("Montant")
+        self.view.total.set(self.get_total_string(sum))
 
-    def get_total_amount(self, key):
-        sum = self.get_string_amount(key)
-        return "Total = " + str(sum) + " €"
+    def get_total(self, key):
+        return round(float(self.model.df[key].sum()), 2)
 
-    def get_string_amount(self, key):
-        sum = self.model.df[key].sum()
-        return '{:,}'.format(round(sum,2)).replace(',', ' ')
+    def get_string_amount(self, value):
+        return '{:,}'.format(value).replace(',', ' ')
+    
+    def get_total_string(self, sum):
+        return "Total = " + self.get_string_amount(sum) + " €"
+    
+class SavingsController(SimpleTreeViewController):
+    pass
+    

@@ -18,12 +18,15 @@
     },
     "Incomes":
     {
-        "file": "./resources/revenus.csv"
+        "file": "./resources/revenus.csv",
+        "total": 100000
     },
     "Savings":
     {
 
+        "file": "./resources/epargnes.csv",
+        "total": 100000,
         "save_rate":0.35,
-        "file": "./resources/epargnes.csv"
+        "balance" : 1000
     }
 }
