@@ -19,12 +19,12 @@ class Reader:
     def _with_file(self, data = None):
         if self.file:
             try:
-                if data:
-                    self._sub_save_file(data)
-                else:
+                if data is None:
                     return self._sub_open_file()
-            except ValueError:
-                print("File cannot be opened or saved.")
+                else:
+                    self._sub_save_file(data)
+            except ValueError as e:
+                print(f"File cannot be opened or saved: {e}")
             except FileNotFoundError:
                 print("File not found.")
             except:
@@ -89,11 +89,18 @@ class BasicModel:
                 self.data[key] = {}
 
     @staticmethod
-    def _load(_dict, key, file_name='file'):
+    def _load(_dict, key, file='file'):
         try:
-            return Reader(_dict[key][file_name]).open_file()
+            return Reader(_dict[key][file]).open_file()
         except KeyError as error:
-            print(f"Error parsing dict : {error}")
+            print(f"Error parsing dict: {error}")
+
+    @staticmethod
+    def _save(file, data):
+        try:
+            return Reader(file).save_file(data)
+        except:
+            print(f"Error saving data in: {file}")
 
     def __getattr__(self, name: str):
         "Returned object is a copy. Original cannot be modified."
@@ -123,6 +130,15 @@ class Model(BasicModel):
                 tables[car]['cost'] = self._load(self.data['Cars'], car, 'cost_file')
                 tables[car]['kms'] = self._load(self.data['Cars'], car, 'km_file')
             return tables
+        
+    def save(self):
+        self._save(self.file, self.data)
+        self._save(self.data['Incomes']['file'], self.incomes_table)
+        self._save(self.data['Savings']['file'], self.incomes_table)
+        if self.cars:
+            for car in self.cars:
+                self._save(self.data['Cars'][car]['cost_file'], self.cars_tables[car]['cost'])
+                self._save(self.data['Cars'][car]['km_file'], self.cars_tables[car]['kms'])
         
     def __repr__(self):
         return f"""

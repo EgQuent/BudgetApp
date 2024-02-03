@@ -34,7 +34,7 @@ class PageController(BasicController):
 
     def save_data(self):
         self.update_data()
-        self.model.save_file(self.model.df)
+        self.model.save()
 
     def update_data(self):
         pass
@@ -44,10 +44,11 @@ class SimpleTreeViewController(PageController):
 
     def __init__(self, model, page_view):
         super().__init__(model, page_view)
+        self.table = self.model.incomes_table
 
     def start(self, key):
-        columns = list(self.model.df.columns)
-        rows = self.model.df.to_numpy().tolist()
+        columns = list(self.table.columns)
+        rows = self.table.to_numpy().tolist()
         sum = self.get_total(key)
         total = self.get_total_string(sum)
         self.view.total.set(total)
@@ -70,13 +71,16 @@ class SimpleTreeViewController(PageController):
                 except IndexError:
                     col.append('')
             data[headings[i]] = col
-        self.model.df = pd.DataFrame(data)
-        # print(self.model.df.head(4))
+        self.table = pd.DataFrame(data)
         sum = self.get_total("Montant")
         self.view.total.set(self.get_total_string(sum))
+        self.update_model()
+
+    def update_model(self):
+        self.model.incomes_table = self.table
 
     def get_total(self, key):
-        return round(float(self.model.df[key].sum()), 2)
+        return round(float(self.table[key].sum()), 2)
 
     @staticmethod
     def get_string_amount(value):
