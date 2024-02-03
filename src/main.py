@@ -15,19 +15,22 @@ class App(tk.Tk):
         self.geometry(f"{self.STD_SIZE_X}x{self.STD_SIZE_Y}")
         self.minsize(self.STD_SIZE_X, self.STD_SIZE_Y)
 
+        # create a controller
+        model = BasicModel(self.DATA_FILE)
+
         # create a view and place it on the root window
         view = MainView(self)
         self.protocol("WM_DELETE_WINDOW", view.on_closing)
         view.pack(expand=True, fill="both")
 
-        # create a controller
-        controller = Controller(self.DATA_FILE, view)
+        # # create a controller
+        # controller = Controller(model, view)
 
-        # set the controller to view
-        view.set_controller(controller)
+        # # set the controller to view
+        # view.set_controller(controller)
 
-        #start controller
-        controller.start()
+        # #start controller
+        # controller.start()
 
     @classmethod
     def set_window(cls):
@@ -36,4 +39,4 @@ class App(tk.Tk):
 
 if __name__ == '__main__':
     app = App("Py Budget Application")
-    app.mainloop()
+    # app.mainloop()

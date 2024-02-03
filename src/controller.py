@@ -4,12 +4,8 @@ import pandas as pd
 from model import BasicModel
 
 class BasicController:
-    def __init__(self, data_file, view):
-        try :
-            self.model = BasicModel(data_file)
-            self.model.open_file()
-        except :
-            print("Cannot load table.")
+    def __init__(self, model, view):
+        self.model = model
         self.view = view
 
     def start(self):
@@ -17,8 +13,8 @@ class BasicController:
 
 class Controller(BasicController):
 
-    def __init__(self, data_file, view):
-        super().__init__(data_file, view)
+    def __init__(self, model, view):
+        super().__init__(model, view)
         self.page_ctrl = None
 
     def start(self):
@@ -49,8 +45,8 @@ class PageController(BasicController):
 
 class SimpleTreeViewController(PageController):
 
-    def __init__(self, data_file, page_view):
-        super().__init__(data_file, page_view)
+    def __init__(self, model, page_view):
+        super().__init__(model, page_view)
 
     def start(self, key):
         columns = list(self.model.df.columns)

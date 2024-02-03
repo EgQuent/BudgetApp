@@ -12,8 +12,8 @@
         {
             "name": "Clio 3",
             "end_km":220000,
-            "cost_file": "./resources/cost_voiture_1.csv",
-            "km_file": "./resources/km_voiture_1.csv"
+            "cost_file": "./resources/cost_voiture_2.csv",
+            "km_file": "./resources/km_voiture_2.csv"
         }
     },
     "Incomes":
