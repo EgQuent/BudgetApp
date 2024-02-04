@@ -1,6 +1,10 @@
 import pandas as pd
 
 class BasicController:
+
+    AKEY = 'Montant'
+    DIGITS = 2
+
     def __init__(self, model, view):
         self.model = model
         self.view = view
@@ -9,8 +13,6 @@ class BasicController:
         pass
 
 class Controller(BasicController):
-
-    AKEY = 'Montant'
 
     def __init__(self, model, view):
         super().__init__(model, view)
@@ -21,7 +23,7 @@ class Controller(BasicController):
         self.view.load_view(buttons)
 
     def request_incomes_view(self, page_view):
-        self.page_ctrl = SimpleTreeViewController(self.model, page_view)
+        self.page_ctrl = IncomesController(self.model, page_view)
         page_view.set_controller(self.page_ctrl)
         self.page_ctrl.start(self.AKEY)
 
@@ -32,33 +34,54 @@ class Controller(BasicController):
 
 class PageController(BasicController):
 
-    def save_data(self):
-        self.update_data()
-        self.model.save()
-
     def update_data(self):
         pass
 
+    def update_model(self):
+        pass
 
-class SimpleTreeViewController(PageController):
+    def save_data(self):
+        self.update_data(False)
+        self.update_model()
+        self.model.save()
+
+
+class TreeViewController(PageController):
 
     def __init__(self, model, page_view):
         super().__init__(model, page_view)
-        self.table = self.model.incomes_table
+        self.table = None
+        self.total_tree = None
 
     def start(self, key):
         columns = list(self.table.columns)
         rows = self.table.to_numpy().tolist()
-        sum = self.get_total(key)
-        total = self.get_total_string(sum)
-        self.view.total.set(total)
+        self.update_data(False)
         self.view.load_view(columns, rows)
+        self.save_data()
 
-    def update_data(self):
-        headings = self.view.tree['columns']
-        rows =[]
-        for row_id in self.view.tree.get_children():
-            rows.append(self.view.tree.item(row_id)['values'])
+    def update_data(self, from_view : bool):
+        if from_view:
+            headings = self.view.tree['columns']
+            rows =[]
+            for row_id in self.view.tree.get_children():
+                rows.append(self.view.tree.item(row_id)['values'])
+            self.table = self.remake_df(headings, rows)
+        self.total_tree = self.get_total("Montant")
+        self.view.total_treeview.set(self.get_total_string(self.total_tree))
+
+    def get_total(self, key):
+        return round(float(self.table[key].sum()), 2)
+
+    @staticmethod
+    def get_string_amount(value):
+        return '{:,}'.format(value).replace(',', ' ')
+    
+    def get_total_string(self, sum):
+        return "Total = " + self.get_string_amount(sum) + " €"
+    
+    @staticmethod
+    def remake_df(headings, rows):
         data = {}
         for i in range(0, len(headings)):
             col = []
@@ -71,24 +94,47 @@ class SimpleTreeViewController(PageController):
                 except IndexError:
                     col.append('')
             data[headings[i]] = col
-        self.table = pd.DataFrame(data)
-        sum = self.get_total("Montant")
-        self.view.total.set(self.get_total_string(sum))
-        self.update_model()
+        return pd.DataFrame(data)
+
+
+class IncomesController(TreeViewController):
+
+    def __init__(self, model, page_view):
+        super().__init__(model, page_view)
+        self.table = self.model.incomes_table
+        self.total_tree = round(self.model.data['Incomes']['total'], self.DIGITS)
 
     def update_model(self):
         self.model.incomes_table = self.table
-
-    def get_total(self, key):
-        return round(float(self.table[key].sum()), 2)
-
-    @staticmethod
-    def get_string_amount(value):
-        return '{:,}'.format(value).replace(',', ' ')
+        self.model.data['Incomes']['total'] = round(self.total_tree, self.DIGITS)
     
-    def get_total_string(self, sum):
-        return "Total = " + self.get_string_amount(sum) + " €"
+class SavingsController(TreeViewController):
     
-class SavingsController(SimpleTreeViewController):
-    pass
+    def __init__(self, model, page_view):
+        super().__init__(model, page_view)
+        self.table = self.model.savings_table
+        self.rate = int(self.model.data['Savings']['save_rate'])
+        self.total_tree = round(self.model.data['Savings']['total_saved'], self.DIGITS)
+        self.balance = round(self.model.data['Savings']['balance'], self.DIGITS)
+        self.total_incomes = round(self.model.data['Incomes']['total'], self.DIGITS)
+        self.total_obj = round(self.model.data['Savings']['total_obj'], self.DIGITS)
+
+    def update_data(self, from_view: bool):
+        super().update_data(from_view)
+        if from_view :
+            self.rate = self.view.rate.get()
+        self.view.total_inc.set(self.get_total_string(self.total_incomes))
+        self.view.rate.set(int(self.rate))
+        self.total_obj = round(self.rate/100*self.total_incomes, self.DIGITS)
+        self.view.total_obj.set(self.get_total_string(self.total_obj))
+        self.view.saved.set(self.get_total_string(self.total_tree))
+        self.balance = self.total_tree - self.total_obj
+        self.view.balance.set(self.get_total_string(self.balance))
+
+    def update_model(self):
+        self.model.savings_table = self.table
+        self.model.data['Savings']['save_rate'] = round(self.rate, self.DIGITS)
+        self.model.data['Savings']['total_saved'] = round(self.total_tree, self.DIGITS)
+        self.model.data['Savings']['total_obj'] = round(self.total_obj, self.DIGITS)
+        self.model.data['Savings']['balance'] = round(self.balance, self.DIGITS)
     

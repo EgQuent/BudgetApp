@@ -71,7 +71,7 @@ class Reader:
     
     def _save_json(self, data):
         with open(self.file, 'w') as json_file:
-            json.dump(data, json_file)
+            json.dump(data, json_file, indent=4)
 
 class BasicModel:
     """Abstract Model"""
@@ -134,7 +134,7 @@ class Model(BasicModel):
     def save(self):
         self._save(self.file, self.data)
         self._save(self.data['Incomes']['file'], self.incomes_table)
-        self._save(self.data['Savings']['file'], self.incomes_table)
+        self._save(self.data['Savings']['file'], self.savings_table)
         if self.cars:
             for car in self.cars:
                 self._save(self.data['Cars'][car]['cost_file'], self.cars_tables[car]['cost'])

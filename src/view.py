@@ -90,9 +90,9 @@ class BasicPage(BasicView):
         elif title == "Cars":
             return "Voitures"
         
-    def updated_view(self):
+    def updated_view(self, event = None):
         self.modified = True
-        self.controller.update_data()
+        self.controller.update_data(True)
     
     def save_modification(self):
         if self.modified:
@@ -105,7 +105,7 @@ class SimpleTreeView(BasicPage):
     def __init__(self, parent, title):
         super().__init__(parent, title)
         self.tree = None
-        self.total = tk.StringVar(self, "- €")
+        self.total_treeview = tk.StringVar(self, "- €")
         self.init_layout()
 
     def init_layout(self):
@@ -147,7 +147,8 @@ class SimpleTreeView(BasicPage):
         add_button = ttk.Button(buttons_frame, text='-', command= self.tree.on_delete_pressed)
         add_button.pack(fill='x', expand=False)
 
-        total_label = tk.Label(self, textvariable= self.total)
+        # Add total at the end
+        total_label = tk.Label(self, textvariable= self.total_treeview)
         total_label.grid(row=2, column=0, sticky="nse")
 
         self.tree.set_update_function(self.updated_view)
@@ -160,7 +161,9 @@ class SavingsView(SimpleTreeView):
 
     def __init__(self, parent, title):
         super().__init__(parent, title)
+        self.total_inc = tk.StringVar(self, "- €")
         self.rate = tk.IntVar(self, 35)
+        self.total_obj = tk.StringVar(self, "- €")
         self.saved = tk.StringVar(self, "- €")
         self.balance = tk.StringVar(self, "- €")
 
@@ -175,21 +178,27 @@ class SavingsView(SimpleTreeView):
         title_label = tk.Label(self, text=self.titled(self.title))
         title_label.grid(row=0, column=0, columnspan=3, sticky="nsew")
 
+
     def load_view(self, columns, rows):
         super().load_view(columns, rows)
 
         balance_frame = ttk.Frame(self)
         balance_frame.grid(row=1,column=2, rowspan=2, sticky="nsew")
 
-        total_rev_label = tk.Label(balance_frame, textvariable= self.total)
-        total_rev_label.pack(fill='x', expand=False)
+        total_inc_label = tk.Label(balance_frame, textvariable= self.total_inc)
+        total_inc_label.pack(fill='x', expand=False)
 
         rate_frame = ttk.Frame(balance_frame)
         rate_label = tk.Label(rate_frame, text="Taux d'epargne = ")
         rate_entry = ttk.Entry(rate_frame, textvariable= self.rate)
+        rate_entry.bind("<FocusOut>", self.updated_view)
+        rate_entry.bind("<Return>", self.updated_view)
         rate_label.pack(side="left")
         rate_entry.pack(side="left")
         rate_frame.pack(fill='x', expand=False)
+
+        total_obj_label = tk.Label(balance_frame, textvariable= self.total_obj)
+        total_obj_label.pack(fill='x', expand=False)
 
         total_saved_label = tk.Label(balance_frame, textvariable= self.saved)
         total_saved_label.pack(fill='x', expand=False)
