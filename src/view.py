@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesno
-from customTk import TreeviewEdit, BetterLabel, AmountVar
+from customTk import BetterLabel, AmountVar, BetterTreeView
 from datetime import datetime
 
 class BasicView(ttk.Frame):
@@ -109,48 +109,24 @@ class SimpleTreeView(BasicPage):
 
     def init_layout(self):
         self.columnconfigure(0, weight=18, uniform='b')
-        self.columnconfigure(1, weight=1, uniform='b')
         self.rowconfigure(0, weight=1, uniform='c')
         self.rowconfigure(1, weight=18, uniform='c')
         self.rowconfigure(2, weight=1, uniform='c')
 
-        title_label = tk.Label(self, text=self.titled(self.title))
-        title_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        self.title.grid(row=0, column=0, sticky="nsew")
 
   
 
     def load_view(self, columns, rows):
-
-        data_frame = ttk.Frame(self)
-        data_frame.grid(row=1,column=0,sticky="nsew")
-        
-        # Create TreeView
-        self.tree = TreeviewEdit(data_frame, columns=columns, show='headings')
-        for column in self.tree['columns']:
-            self.tree.heading(column, text=column)
-            self.tree.column(column, width=50)
-        for row in rows:
-            self.tree.insert('', tk.END, values=row)
-        self.tree.modified = False
-        self.tree.pack(fill='both', expand=True)
-    
-        # Add buttons frame
-        buttons_frame = ttk.Frame(self)
-        buttons_frame.grid(row=1,column=1,sticky="nsew")
-
-        # Add button new line
-        add_button = ttk.Button(buttons_frame, text='+', command= self.add_incomes)
-        add_button.pack(fill='x', expand=False)
-
-        # Add delete button
-        add_button = ttk.Button(buttons_frame, text='-', command= self.tree.on_delete_pressed)
-        add_button.pack(fill='x', expand=False)
+        self.tree = BetterTreeView(self, rows, columns=columns, show='headings')
+        self.tree.grid(row=1, column=0, sticky="nsew")
 
         # Add total at the end
         total_label = BetterLabel(self, "Total :", self.total_treeview, "€")
         total_label.grid(row=2, column=0, sticky="nse")
 
         self.tree.set_update_function(self.updated_view)
+        self.tree.add = self.add_incomes
 
     def add_incomes(self):
         today = datetime.today().strftime("%d/%m/%Y")
@@ -167,9 +143,8 @@ class SavingsView(SimpleTreeView):
         self.balance = AmountVar(self, "- €")
 
     def init_layout(self):
-        self.columnconfigure(0, weight=10, uniform='b')
-        self.columnconfigure(1, weight=1, uniform='b')
-        self.columnconfigure(2, weight=8, uniform='b')
+        self.columnconfigure(0, weight=11, uniform='b')
+        self.columnconfigure(1, weight=8, uniform='b')
         self.rowconfigure(0, weight=1, uniform='c')
         self.rowconfigure(1, weight=18, uniform='c')
         self.rowconfigure(2, weight=1, uniform='c')
@@ -182,7 +157,7 @@ class SavingsView(SimpleTreeView):
         super().load_view(columns, rows)
 
         balance_frame = ttk.Frame(self)
-        balance_frame.grid(row=1,column=2, rowspan=2, sticky="nsew")
+        balance_frame.grid(row=1,column=1, rowspan=2, sticky="nsew")
 
         total_inc_label = BetterLabel(balance_frame, "Revenus (total) :", self.total_inc, "€")
         total_inc_label.pack(fill='x', expand=False)

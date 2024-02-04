@@ -41,7 +41,7 @@ class PageController(BasicController):
         pass
 
     def save_data(self):
-        self.update_data(False)
+        self.update_data(True)
         self.update_model()
         self.model.save()
 
