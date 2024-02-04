@@ -191,7 +191,6 @@ class SavingsView(SimpleTreeView):
         rate_frame = ttk.Frame(balance_frame)
         rate_label = tk.Label(rate_frame, text="Taux d'epargne = ")
         rate_entry = ttk.Entry(rate_frame, textvariable= self.rate)
-        rate_entry.bind("<FocusOut>", self.updated_view)
         rate_entry.bind("<Return>", self.updated_view)
         rate_label.pack(side="left")
         rate_entry.pack(side="left")
