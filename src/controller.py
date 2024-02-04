@@ -1,4 +1,4 @@
-import pandas as pd
+from tools import make_df
 
 class BasicController:
 
@@ -71,7 +71,7 @@ class TreeViewController(PageController):
             rows =[]
             for row_id in self.view.tree.get_children():
                 rows.append(self.view.tree.item(row_id)['values'])
-            self.table = self.remake_df(headings, rows)
+            self.table = make_df(headings, rows)
         self.total_tree = self.get_total("Montant")
         self.view.total_treeview.set(self.total_tree)
 
@@ -81,23 +81,6 @@ class TreeViewController(PageController):
     def get_total_string(self, sum):
         return "Total = " + self.get_string_amount(sum) + " €"
     
-    @staticmethod
-    def remake_df(headings, rows):
-        data = {}
-        for i in range(0, len(headings)):
-            col = []
-            for j in range(0, len(rows)):
-                row = rows[j]
-                try:
-                    col.append(float(row[i]))
-                except ValueError:
-                    col.append(row[i])
-                except IndexError:
-                    col.append('')
-            data[headings[i]] = col
-        return pd.DataFrame(data)
-
-
 class IncomesController(TreeViewController):
 
     def __init__(self, model, page_view):
@@ -150,6 +133,15 @@ class CarsController(PageController):
         self.update_data(False)
         cars_name = []
         for car in self.cars:
-            cars_name.append(self.model.data['Cars'][car]['name'])
-        self.view.load_view(cars_name)
+            cars_name.append([car, self.model.data['Cars'][car]['name']])
+        self.view.load_view(cars_name, self.cars_tables)
         self.save_data()
+
+    def update_data(self, from_view : bool):
+        if from_view:
+            for tab in self.view.tabs:
+                self.cars_tables[tab.name]['cost'] = tab.tree_expense.get_dataframe()
+                self.cars_tables[tab.name]['kms'] = tab.tree_kms.get_dataframe()
+
+    def update_model(self):
+        self.model.cars_tables = self.cars_tables

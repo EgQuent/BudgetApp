@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tools import get_string_amount
+from tools import get_string_amount, make_df
 
 
 class AmountVar(tk.StringVar):
@@ -163,3 +163,17 @@ class BetterTreeView(TreeviewEdit):
         # Add delete button
         add_button = ttk.Button(buttons_frame, text='-', command= self.on_delete_pressed)
         add_button.pack(fill='x', expand=False)
+
+class PandasTreeView(BetterTreeView):
+
+    def __init__(self, parent, dataframe, *args, **kwargs):
+        columns = list(dataframe.columns)
+        rows = dataframe.to_numpy().tolist()
+        super().__init__(parent, rows, *args, columns=columns, **kwargs)
+
+    def get_dataframe(self):
+        headings = self['columns']
+        rows =[]
+        for row_id in self.get_children():
+            rows.append(self.item(row_id)['values'])
+        return make_df(headings, rows)

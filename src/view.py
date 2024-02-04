@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesno
-from customTk import BetterLabel, AmountVar, BetterTreeView
+from customTk import BetterLabel, AmountVar, BetterTreeView, PandasTreeView
 from datetime import datetime
 
 class BasicView(ttk.Frame):
@@ -130,20 +130,19 @@ class SimpleTreeView(BasicPage):
         self.rowconfigure(1, weight=18, uniform='c')
         self.rowconfigure(2, weight=1, uniform='c')
 
-        self.title.grid(row=0, column=0, sticky="nsew")
-
-  
+        title_label = tk.Label(self, text=self.titled(self.title))
+        title_label.grid(row=0, column=0, columnspan=3, sticky="nsew")
 
     def load_view(self, columns, rows):
         self.tree = BetterTreeView(self, rows, columns=columns, show='headings')
         self.tree.grid(row=1, column=0, sticky="nsew")
 
+        self.tree.set_update_function(self.updated_view)
+        self.tree.add = self.add_incomes
+
         # Add total at the end
         total_label = BetterLabel(self, "Total :", self.total_treeview, "€")
         total_label.grid(row=2, column=0, sticky="nse")
-
-        self.tree.set_update_function(self.updated_view)
-        self.tree.add = self.add_incomes
 
     def add_incomes(self):
         today = datetime.today().strftime("%d/%m/%Y")
@@ -205,24 +204,47 @@ class NotebookView(BasicPage):
     def __init__(self, parent, title: str):
         super().__init__(parent, title)
         self.notebook = ttk.Notebook(self)
+        self.tabs = []
 
     def load_view(self, tabs_name: list):
-        for tab in tabs_name:
+        for tab_name in tabs_name:
             crt_tab = ttk.Frame(self.notebook)
-            self.notebook.add(crt_tab, text=tab)
+            crt_tab.name = tab_name[0]
+            self.notebook.add(crt_tab, text=tab_name[1])
+            self.tabs.append(crt_tab)
         self.notebook.grid(row=1,column=0, sticky="nsew")
 
 
 class CarsView(NotebookView):
     
-    def load_view(self, tabs_name: list):
-        super().load_view(tabs_name)
-        tabs = self.notebook.children
-        for tab in tabs:
-            tab.columnconfigure(0, weight=11, uniform='e')
+    def load_view(self, cars_name: list, cars_tables: dict):
+        super().load_view(cars_name)
+        cars_keys = list(cars_tables.keys())
+        for tab in self.tabs:
+            tab.columnconfigure(0, weight=12, uniform='e')
             tab.columnconfigure(1, weight=8, uniform='e')
             tab.rowconfigure(0, weight=1, uniform='f')
             tab.rowconfigure(1, weight=1, uniform='f')
+
+            cost_df = cars_tables[tab.name]['cost']
+            kms_df = cars_tables[tab.name]['kms']
+
+            tab.tree_expense = PandasTreeView(tab, dataframe=cost_df, show='headings')
+            tab.tree_expense.grid(row=0, column=0, sticky="nsew")
+            tab.tree_expense.set_update_function(self.updated_view)
+            # tree_expense.add = self.add_expense
+
+            tab.tree_kms = PandasTreeView(tab, dataframe=kms_df, show='headings')
+            tab.tree_kms.grid(row=1, column=0, sticky="nsew")
+            tab.tree_kms.set_update_function(self.updated_view)
+
+    def add_expense(self):
+        today = datetime.today().strftime("%d/%m/%Y")
+        self.tree.insert('', 0, values=[today, "???", 0.0])
+    
+    def add_kms(self):
+        today = datetime.today().strftime("%d/%m/%Y")
+        self.tree.insert('', 0, values=[today, "???", 0.0])
 
 
 class Page(ttk.Frame):
