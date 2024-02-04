@@ -1,9 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesno
-from customTk import TreeviewEdit
+from customTk import TreeviewEdit, BetterLabel, AmountVar
 from datetime import datetime
-from copy import deepcopy
 
 class BasicView(ttk.Frame):
 
@@ -105,11 +104,11 @@ class SimpleTreeView(BasicPage):
     def __init__(self, parent, title):
         super().__init__(parent, title)
         self.tree = None
-        self.total_treeview = tk.StringVar(self, "- €")
+        self.total_treeview = AmountVar(self, "- €")
         self.init_layout()
 
     def init_layout(self):
-        self.columnconfigure(0, weight=9, uniform='b')
+        self.columnconfigure(0, weight=18, uniform='b')
         self.columnconfigure(1, weight=1, uniform='b')
         self.rowconfigure(0, weight=1, uniform='c')
         self.rowconfigure(1, weight=18, uniform='c')
@@ -148,7 +147,7 @@ class SimpleTreeView(BasicPage):
         add_button.pack(fill='x', expand=False)
 
         # Add total at the end
-        total_label = tk.Label(self, textvariable= self.total_treeview)
+        total_label = BetterLabel(self, "Total :", self.total_treeview, "€")
         total_label.grid(row=2, column=0, sticky="nse")
 
         self.tree.set_update_function(self.updated_view)
@@ -161,16 +160,16 @@ class SavingsView(SimpleTreeView):
 
     def __init__(self, parent, title):
         super().__init__(parent, title)
-        self.total_inc = tk.StringVar(self, "- €")
+        self.total_inc = AmountVar(self, "- €")
         self.rate = tk.IntVar(self, 35)
-        self.total_obj = tk.StringVar(self, "- €")
-        self.saved = tk.StringVar(self, "- €")
-        self.balance = tk.StringVar(self, "- €")
+        self.total_obj = AmountVar(self, "- €")
+        self.saved = AmountVar(self, "- €")
+        self.balance = AmountVar(self, "- €")
 
     def init_layout(self):
-        self.columnconfigure(0, weight=8, uniform='b')
+        self.columnconfigure(0, weight=10, uniform='b')
         self.columnconfigure(1, weight=1, uniform='b')
-        self.columnconfigure(2, weight=3, uniform='b')
+        self.columnconfigure(2, weight=8, uniform='b')
         self.rowconfigure(0, weight=1, uniform='c')
         self.rowconfigure(1, weight=18, uniform='c')
         self.rowconfigure(2, weight=1, uniform='c')
@@ -185,24 +184,28 @@ class SavingsView(SimpleTreeView):
         balance_frame = ttk.Frame(self)
         balance_frame.grid(row=1,column=2, rowspan=2, sticky="nsew")
 
-        total_inc_label = tk.Label(balance_frame, textvariable= self.total_inc)
+        total_inc_label = BetterLabel(balance_frame, "Revenus (total) :", self.total_inc, "€")
         total_inc_label.pack(fill='x', expand=False)
 
         rate_frame = ttk.Frame(balance_frame)
-        rate_label = tk.Label(rate_frame, text="Taux d'epargne = ")
+        rate_frame.columnconfigure(0, weight=3, uniform='e')
+        rate_frame.columnconfigure(1, weight=3, uniform='e')
+        rate_frame.columnconfigure(2, weight=1, uniform='e')
+        rate_frame.rowconfigure(0, weight=1, uniform='f')
+        rate_label = tk.Label(rate_frame, text="Taux (%) :")
         rate_entry = ttk.Entry(rate_frame, textvariable= self.rate)
         rate_entry.bind("<Return>", self.updated_view)
-        rate_label.pack(side="left")
-        rate_entry.pack(side="left")
+        rate_label.grid(row=0, column=0, sticky="nse")
+        rate_entry.grid(row=0, column=1, sticky="nsew")
         rate_frame.pack(fill='x', expand=False)
 
-        total_obj_label = tk.Label(balance_frame, textvariable= self.total_obj)
+        total_obj_label = BetterLabel(balance_frame, "Epargne cible :", self.total_obj, "€")
         total_obj_label.pack(fill='x', expand=False)
 
-        total_saved_label = tk.Label(balance_frame, textvariable= self.saved)
+        total_saved_label = BetterLabel(balance_frame, "Epargne réelle :", self.saved, "€")
         total_saved_label.pack(fill='x', expand=False)
 
-        balance_label = tk.Label(balance_frame, textvariable= self.balance)
+        balance_label = BetterLabel(balance_frame, "Balance :", self.balance, "€")
         balance_label.pack(fill='x', expand=False)
 
 

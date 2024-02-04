@@ -1,5 +1,37 @@
 import tkinter as tk
 from tkinter import ttk
+from tools import get_string_amount
+
+
+class AmountVar(tk.StringVar):
+
+    def __init__(self, parent, value, *args, **kwargs):
+        super().__init__(parent, '', *args, **kwargs)
+        self.value = self.get_string(value)
+        
+    def set(self, value):
+        super().set(self.get_string(value))
+        
+    @staticmethod
+    def get_string(value):
+        if isinstance(value, (int, float)):
+            return get_string_amount(value)
+        return value
+
+
+class BetterLabel(tk.Frame):
+
+    def __init__(self, parent, front_text: str, dynamic_text: tk.StringVar, end_text: str = None):
+        super().__init__(parent)
+
+        self.columnconfigure(0, weight=3, uniform='b')
+        self.columnconfigure(1, weight=3, uniform='b')
+        self.columnconfigure(2, weight=1, uniform='b')
+        self.rowconfigure(0, weight=1, uniform='c')
+
+        tk.Label(self, text=front_text).grid(row=0, column=0, sticky="nse")
+        tk.Label(self, textvariable=dynamic_text).grid(row=0, column=1, sticky="nsew")
+        tk.Label(self, text=end_text).grid(row=0, column=2, sticky="nsew")
 
 
 class TreeviewEdit(ttk.Treeview):

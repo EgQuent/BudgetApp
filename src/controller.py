@@ -68,14 +68,10 @@ class TreeViewController(PageController):
                 rows.append(self.view.tree.item(row_id)['values'])
             self.table = self.remake_df(headings, rows)
         self.total_tree = self.get_total("Montant")
-        self.view.total_treeview.set(self.get_total_string(self.total_tree))
+        self.view.total_treeview.set(self.total_tree)
 
     def get_total(self, key):
-        return round(float(self.table[key].sum()), 2)
-
-    @staticmethod
-    def get_string_amount(value):
-        return '{:,}'.format(value).replace(',', ' ')
+        return round(float(self.table[key].sum()), self.DIGITS)
     
     def get_total_string(self, sum):
         return "Total = " + self.get_string_amount(sum) + " €"
@@ -123,13 +119,13 @@ class SavingsController(TreeViewController):
         super().update_data(from_view)
         if from_view :
             self.rate = self.view.rate.get()
-        self.view.total_inc.set(self.get_total_string(self.total_incomes))
+        self.view.total_inc.set(self.total_incomes)
         self.view.rate.set(int(self.rate))
         self.total_obj = round(self.rate/100*self.total_incomes, self.DIGITS)
-        self.view.total_obj.set(self.get_total_string(self.total_obj))
-        self.view.saved.set(self.get_total_string(self.total_tree))
+        self.view.total_obj.set(self.total_obj)
+        self.view.saved.set(self.total_tree)
         self.balance = self.total_tree - self.total_obj
-        self.view.balance.set(self.get_total_string(self.balance))
+        self.view.balance.set(self.balance)
 
     def update_model(self):
         self.model.savings_table = self.table
