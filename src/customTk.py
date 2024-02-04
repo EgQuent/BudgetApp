@@ -120,3 +120,46 @@ class TreeviewEdit(ttk.Treeview):
 
     def on_focus_out(self, event):
         event.widget.destroy()
+
+
+class BetterTreeView(TreeviewEdit):
+
+    def __init__(self, parent, rows, *args, **kwargs):
+        self.frame = ttk.Frame(parent)
+        super().__init__(self.frame, *args, **kwargs)
+        self._load(rows)
+
+    def grid(self, *args, **kwargs):
+       self.frame.grid(*args, **kwargs)
+
+    def add(self):
+        empty_list = [''] * len(self['columns'])
+        self.insert('', 0, values=empty_list)
+
+    def _add(self):
+        self.add()
+
+    def _load(self, rows):
+        self.frame.columnconfigure(0, weight=18, uniform='bb')
+        self.frame.columnconfigure(1, weight=1, uniform='bb')
+        self.frame.rowconfigure(0, weight=1, uniform='cc')
+
+        for column in self['columns']:
+            self.heading(column, text=column)
+            self.column(column, width=50)
+        for row in rows:
+            self.insert('', tk.END, values=row)
+        self.modified = False
+        super().grid(row=0, column=0, sticky="nsew")
+    
+        # Add buttons frame
+        buttons_frame = ttk.Frame(self.frame)
+        buttons_frame.grid(row=0,column=1,sticky="nsew")
+
+        # Add button new line
+        add_button = ttk.Button(buttons_frame, text='+', command= self._add)
+        add_button.pack(fill='x', expand=False)
+
+        # Add delete button
+        add_button = ttk.Button(buttons_frame, text='-', command= self.on_delete_pressed)
+        add_button.pack(fill='x', expand=False)
