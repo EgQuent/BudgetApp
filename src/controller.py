@@ -32,9 +32,14 @@ class Controller(BasicController):
         page_view.set_controller(self.page_ctrl)
         self.page_ctrl.start(self.AKEY)
 
+    def request_cars_view(self, page_view):
+        self.page_ctrl = CarsController(self.model, page_view)
+        page_view.set_controller(self.page_ctrl)
+        self.page_ctrl.start()
+
 class PageController(BasicController):
 
-    def update_data(self):
+    def update_data(self, from_view : bool):
         pass
 
     def update_model(self):
@@ -134,3 +139,17 @@ class SavingsController(TreeViewController):
         self.model.data['Savings']['total_obj'] = round(self.total_obj, self.DIGITS)
         self.model.data['Savings']['balance'] = round(self.balance, self.DIGITS)
     
+class CarsController(PageController):
+
+    def __init__(self, model, page_view):
+        super().__init__(model, page_view)
+        self.cars = self.model.cars
+        self.cars_tables = self.model.cars_tables
+
+    def start(self):
+        self.update_data(False)
+        cars_name = []
+        for car in self.cars:
+            cars_name.append(self.model.data['Cars'][car]['name'])
+        self.view.load_view(cars_name)
+        self.save_data()

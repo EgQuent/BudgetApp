@@ -56,6 +56,11 @@ class MainView(BasicView):
         self.page = SavingsView(self, "Savings")
         self.controller.request_savings_view(self.page)
 
+    def request_cars_view(self):
+        self.save_current()
+        self.page = CarsView(self, "Savings")
+        self.controller.request_cars_view(self.page)
+
 
 class Menu(BasicView):
 
@@ -70,15 +75,28 @@ class Menu(BasicView):
                 savings_button = ttk.Button(self,text='Epargnes', command=self.parent.request_savings_view)
                 savings_button.pack(expand=False, fill="x")
                 buttons.remove('Savings')
+            elif "Cars" in buttons:
+                savings_button = ttk.Button(self,text='Voitures', command=self.parent.request_cars_view)
+                savings_button.pack(expand=False, fill="x")
+                buttons.remove('Cars')
         ttk.Label(self, background="grey").pack(expand=True, fill="both")
 
 class BasicPage(BasicView):
     
     def __init__(self, parent, title):
         super().__init__(parent)
-        self.title = tk.Label(self, text=self.titled(title))
+        self.title = title
         self.modified = False
-        self.grid(row=0,column=1,sticky="nsew")   
+        self.grid(row=0,column=1,sticky="nsew")
+        self.init_layout()
+
+    def init_layout(self):
+        self.columnconfigure(0, weight=1, uniform='b')
+        self.rowconfigure(0, weight=1, uniform='c')
+        self.rowconfigure(1, weight=19, uniform='c')
+
+        title_label = tk.Label(self, text=self.titled(self.title))
+        title_label.grid(row=0, column=0, sticky="nsew")
 
     @staticmethod
     def titled(title):
@@ -105,7 +123,6 @@ class SimpleTreeView(BasicPage):
         super().__init__(parent, title)
         self.tree = None
         self.total_treeview = AmountVar(self, "- €")
-        self.init_layout()
 
     def init_layout(self):
         self.columnconfigure(0, weight=18, uniform='b')
@@ -208,6 +225,29 @@ class SavingsView(SimpleTreeView):
         balance_label = BetterLabel(balance_frame, "Balance :", self.balance, "€")
         balance_label.pack(fill='x', expand=False)
 
+class NotebookView(BasicPage):
+
+    def __init__(self, parent, title: str):
+        super().__init__(parent, title)
+        self.notebook = ttk.Notebook(self)
+
+    def load_view(self, tabs_name: list):
+        for tab in tabs_name:
+            crt_tab = ttk.Frame(self.notebook)
+            self.notebook.add(crt_tab, text=tab)
+        self.notebook.grid(row=1,column=0, sticky="nsew")
+
+
+class CarsView(NotebookView):
+    
+    def load_view(self, tabs_name: list):
+        super().load_view(tabs_name)
+        tabs = self.notebook.children
+        for tab in tabs:
+            tab.columnconfigure(0, weight=11, uniform='e')
+            tab.columnconfigure(1, weight=8, uniform='e')
+            tab.rowconfigure(0, weight=1, uniform='f')
+            tab.rowconfigure(1, weight=1, uniform='f')
 
 
 class Page(ttk.Frame):
