@@ -216,6 +216,8 @@ class NotebookView(BasicPage):
 
 
 class CarsView(NotebookView):
+
+    CHOICES = ["Achat", "Maintenace"]
     
     def load_view(self, cars_name: list, cars_tables: dict):
         super().load_view(cars_name)
@@ -235,6 +237,7 @@ class CarsView(NotebookView):
             # tree_expense.add = self.add_expense
 
             tab.tree_kms = PandasTreeView(tab, dataframe=kms_df, show='headings')
+            tab.tree_expense.set_choices(self.CHOICES, 4)
             tab.tree_kms.grid(row=1, column=0, sticky="nsew")
             tab.tree_kms.set_update_function(self.updated_view)
 
@@ -245,47 +248,3 @@ class CarsView(NotebookView):
     def add_kms(self):
         today = datetime.today().strftime("%d/%m/%Y")
         self.tree.insert('', 0, values=[today, "???", 0.0])
-
-
-class Page(ttk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.grid(row=0,column=1,sticky="nsew")
-        ttk.Label(self, background="blue").pack(expand=True, fill="both")
-        # Create a Notebook (tabbed layout)
-        self.notebook = ttk.Notebook(self)
-
-        # Create and add tabs
-        self.tab1 = ttk.Frame(self.notebook)
-        self.tab2 = ttk.Frame(self.notebook)
-        self.tab3 = ttk.Frame(self.notebook)
-
-        self.notebook.add(self.tab1, text="Tab 1")
-        self.notebook.add(self.tab2, text="Tab 2")
-        self.notebook.add(self.tab3, text="Tab 3")
-
-        # Pack the notebook to make it visible
-        self.notebook.pack(fill='both', expand=True)
-
-        # Add content to the tabs (you can customize this)
-        self.create_tab1_content()
-        self.create_tab2_content()
-        self.create_tab3_content()
-
-    def create_tab1_content(self):
-        label = ttk.Label(self.tab1, text="Content for Tab 1")
-        label.pack(padx=10, pady=10)
-
-        # Add more widgets as needed
-
-    def create_tab2_content(self):
-        label = ttk.Label(self.tab2, text="Content for Tab 2")
-        label.pack(padx=10, pady=10)
-
-        # Add more widgets as needed
-
-    def create_tab3_content(self):
-        label = ttk.Label(self.tab3, text="Content for Tab 3")
-        label.pack(padx=10, pady=10)
-
-        # Add more widgets as needed
