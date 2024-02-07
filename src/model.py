@@ -55,7 +55,7 @@ class Reader:
                         no_comma = no_space.replace(',','.')
                         df.at[ind, self.AKEY] = float(no_comma) 
         except :
-            print("Cannot parse this CSV file.")
+            print(f"Cannot parse this CSV file: {self.file}")
             return None
         return df
 
@@ -64,7 +64,8 @@ class Reader:
             with open(self.file, 'r') as json_file:
                 return json.load(json_file)
         except :
-            print("Cannot parse this JSON file.")
+            print(f"Cannot parse this JSON file: {self.file}")
+
 
     def _save_csv(self, data):
         data.to_csv(self.file, sep=";", index=False)

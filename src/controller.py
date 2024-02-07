@@ -114,7 +114,7 @@ class SavingsController(TreeViewController):
         self.view.total_obj.set(self.total_obj)
         self.view.saved.set(self.total_tree)
         self.balance = self.total_tree - self.total_obj
-        self.view.balance.set(self.balance)
+        self.view.balance.set(round(self.balance, self.DIGITS))
 
     def update_model(self):
         self.model.savings_table = self.table
