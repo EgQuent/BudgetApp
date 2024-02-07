@@ -58,7 +58,7 @@ class MainView(BasicView):
 
     def request_cars_view(self):
         self.save_current()
-        self.page = CarsView(self, "Savings")
+        self.page = CarsView(self, "Cars")
         self.controller.request_cars_view(self.page)
 
 
@@ -205,11 +205,18 @@ class NotebookView(BasicPage):
         super().__init__(parent, title)
         self.notebook = ttk.Notebook(self)
         self.tabs = []
+        self.args = {}
 
-    def load_view(self, tabs_name: list):
-        for tab_name in tabs_name:
+    def init_args(self, tabs_dict: dict):
+        self.tabs_keys = list(tabs_dict.keys())
+        self.tabs_names = []
+        for key in self.tabs_keys:
+            self.tabs_names.append([str(key), tabs_dict[key]['name']])
+
+    def load_view(self):
+        for tab_name in self.tabs_names:
             crt_tab = ttk.Frame(self.notebook)
-            crt_tab.name = tab_name[0]
+            crt_tab.key = tab_name[0]
             self.notebook.add(crt_tab, text=tab_name[1])
             self.tabs.append(crt_tab)
         self.notebook.grid(row=1,column=0, sticky="nsew")
@@ -217,19 +224,40 @@ class NotebookView(BasicPage):
 
 class CarsView(NotebookView):
 
-    CHOICES = ["Achat", "Maintenace"]
+    CHOICES = ["Achat", "Maintenance"]
+
+    def init_args(self, tabs_dict: dict):
+        super().init_args(tabs_dict)
+        for tab_key in self.tabs_keys:
+            self.args[str(tab_key)] = {}
+            self.args[str(tab_key)]['buy_kms'] = tk.IntVar()
+            self.args[str(tab_key)]['max_kms'] = tk.IntVar(value=220000)
+            self.args[str(tab_key)]['crt_kms'] = tk.IntVar()
+            self.args[str(tab_key)]['pb_kms'] = tk.IntVar()
+            self.args[str(tab_key)]['remaining_months'] = tk.IntVar()
+
+            self.args[str(tab_key)]['total_buy'] = tk.DoubleVar()
+            self.args[str(tab_key)]['coeff_rebuy'] = tk.DoubleVar()
+            self.args[str(tab_key)]['jackpot_rebuy'] = tk.DoubleVar()
+            self.args[str(tab_key)]['monthly_rebuy'] = tk.DoubleVar()
+
+            self.args[str(tab_key)]['total_yearly_maint'] = tk.DoubleVar()
+            self.args[str(tab_key)]['total_thisyear_maint'] = tk.DoubleVar()
+            self.args[str(tab_key)]['coeff_maint'] = tk.DoubleVar()
+            self.args[str(tab_key)]['jackpot_maint'] = tk.DoubleVar()
+            self.args[str(tab_key)]['monthly_maint'] = tk.DoubleVar()
+
     
-    def load_view(self, cars_name: list, cars_tables: dict):
-        super().load_view(cars_name)
-        cars_keys = list(cars_tables.keys())
+    def load_view(self, cars_tables: dict):
+        super().load_view()
         for tab in self.tabs:
             tab.columnconfigure(0, weight=12, uniform='e')
             tab.columnconfigure(1, weight=8, uniform='e')
             tab.rowconfigure(0, weight=1, uniform='f')
             tab.rowconfigure(1, weight=1, uniform='f')
 
-            cost_df = cars_tables[tab.name]['cost']
-            kms_df = cars_tables[tab.name]['kms']
+            cost_df = cars_tables[tab.key]['cost']
+            kms_df = cars_tables[tab.key]['kms']
 
             tab.tree_expense = PandasTreeView(tab, dataframe=cost_df, show='headings')
             tab.tree_expense.grid(row=0, column=0, sticky="nsew")
@@ -240,6 +268,48 @@ class CarsView(NotebookView):
             tab.tree_expense.set_choices(self.CHOICES, 4)
             tab.tree_kms.grid(row=1, column=0, sticky="nsew")
             tab.tree_kms.set_update_function(self.updated_view)
+
+            box = ttk.Frame(tab)
+
+            # KMS
+            ttk.Label(box, text="--- Kilométrage ---").pack(fill='x', expand=False)
+            buy_kms_label = BetterLabel(box, "Kms à l'achat :", self.args[tab.key]['buy_kms'], " (km)")
+            buy_kms_label.pack(fill='x', expand=False)
+            max_kms_label = BetterLabel(box, "Max kms :", self.args[tab.key]['max_kms'], " (km)")
+            max_kms_label.pack(fill='x', expand=False)
+            crt_kms_label = BetterLabel(box, "Kms actuels :", self.args[tab.key]['crt_kms'], " (km)")
+            crt_kms_label.pack(fill='x', expand=False)
+            self.args[tab.key]['pb_kms'].set(int(self.args[tab.key]['crt_kms'].get()/self.args[tab.key]['max_kms'].get()*100))
+            pb = ttk.Progressbar(box,orient='horizontal',mode='determinate', variable=self.args[tab.key]['pb_kms'])
+            pb.pack(fill='x', expand=False)
+            remaining_days = BetterLabel(box, "Mois restants :", self.args[str(tab.key)]['remaining_months'], " (m)")
+            remaining_days.pack(fill='x', expand=False)
+            
+            # REBUY
+            ttk.Label(box, text="--- Amortissement ---").pack(fill='x', expand=False)
+            buy_cost = BetterLabel(box, "Total d'achat :", self.args[str(tab.key)]['total_buy'], " (€)")
+            buy_cost.pack(fill='x', expand=False)
+            rebuy_coeff = BetterLabel(box, "Coeff. de sécurité :", self.args[str(tab.key)]['coeff_rebuy'], "")
+            rebuy_coeff.pack(fill='x', expand=False)
+            rebuy_jackpot = BetterLabel(box, "Cagnotte d'achat :", self.args[str(tab.key)]['jackpot_rebuy'], " (km)")
+            rebuy_jackpot.pack(fill='x', expand=False)
+            monthly_rebuy = BetterLabel(box, "Epargne :", self.args[str(tab.key)]['monthly_rebuy'], " (€/mois) ")
+            monthly_rebuy.pack(fill='x', expand=False)
+            
+            # MAINTENANCE
+            ttk.Label(box, text="--- Maintenance ---").pack(fill='x', expand=False)
+            tym = BetterLabel(box, "Cout moy. :", self.args[str(tab.key)]['total_yearly_maint'], " (€/an)")
+            tym.pack(fill='x', expand=False)
+            ttym = BetterLabel(box, "Cout cette année :", self.args[str(tab.key)]['total_thisyear_maint'], " (€)")
+            ttym.pack(fill='x', expand=False)
+            maint_coeff = BetterLabel(box, "Coeff. de sécurité :", self.args[str(tab.key)]['coeff_maint'], "")
+            maint_coeff.pack(fill='x', expand=False)
+            maint_jackpot = BetterLabel(box, "Cagnotte maint. :", self.args[str(tab.key)]['jackpot_maint'], " (€)")
+            maint_jackpot.pack(fill='x', expand=False)
+            monthly_maint = BetterLabel(box, "Epargne :", self.args[str(tab.key)]['monthly_maint'], " (€/mois) ")
+            monthly_maint.pack(fill='x', expand=False)
+
+            box.grid(row=0, column=1, rowspan=2, sticky="nsew")
 
     def add_expense(self):
         today = datetime.today().strftime("%d/%m/%Y")

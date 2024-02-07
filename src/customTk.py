@@ -234,6 +234,8 @@ class PandasTreeView(BetterTreeView):
 
     def __init__(self, parent, dataframe, *args, **kwargs):
         columns = list(dataframe.columns)
+        if 'Date' in columns :
+            dataframe.sort_values(by='Date', ascending = False, inplace = True)
         rows = dataframe.to_numpy().tolist()
         super().__init__(parent, rows, *args, columns=columns, **kwargs)
 
