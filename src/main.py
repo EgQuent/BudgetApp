@@ -5,8 +5,8 @@ from model import Model
 
 class App(tk.Tk):
 
-    STD_SIZE_X = 600
-    STD_SIZE_Y = 600
+    STD_SIZE_X = 920
+    STD_SIZE_Y = 650
     DATA_FILE = "./resources/data.json"
 
     def __init__(self, title):

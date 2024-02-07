@@ -1,6 +1,21 @@
 import tkinter as tk
 from tkinter import ttk
-from tools import get_string_amount
+from tools import get_string_amount, make_df
+from tkinter.simpledialog import Dialog
+
+class ChoiceMessage(Dialog):
+
+    def __init__(self, parent, choices: list, answer: tk.StringVar = None):
+        self.choices = choices
+        self.answer = answer
+        super().__init__(parent)
+    
+    def body(self, _):
+        box = tk.Frame(self)
+
+        for choice in self.choices:
+            tk.Radiobutton(box, text=str(choice), variable=self.answer, value=choice).pack(anchor = tk.W)
+        box.pack()
 
 
 class AmountVar(tk.StringVar):
@@ -121,8 +136,59 @@ class TreeviewEdit(ttk.Treeview):
     def on_focus_out(self, event):
         event.widget.destroy()
 
+class PopUpTreeview(TreeviewEdit):
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.choices = None
+        self.target_col = None
 
-class BetterTreeView(TreeviewEdit):
+    def set_choices(self, choices: list, target_col: int):
+        self.choices = choices
+        self.target_col = "".join(['#', str(target_col)])
+
+    def on_double_click(self, event):
+        region_clicked = self.identify_region(event.x, event.y)
+        if region_clicked not in ("tree", "cell"):
+            return None
+        
+        column = self.identify_column(event.x)
+        selected_id =self.focus()
+        if column == self.target_col:
+            self.create_pop_up(column, selected_id)
+        else :
+            self.create_editable_cell(column, selected_id)
+
+    def on_tab_pressed(self, event):
+        self.on_enter_pressed(event)
+        nbCols = len(self.item(event.widget.editing_item_id).get("values")) + 1
+        trgCol = event.widget.editing_column_index + 1 + 1
+        if  trgCol >= nbCols :
+            event.widget.destroy()
+            return None
+        column = '#' + str(trgCol)
+        if column == self.target_col:
+            self.create_pop_up(column, event.widget.editing_item_id)
+        else :
+            self.create_editable_cell(column, event.widget.editing_item_id)
+
+    def create_pop_up(self, column, selected_id):
+        answer = tk.StringVar()
+        ChoiceMessage(self, self.choices, answer)
+        if not answer.get() == '':
+            self.on_ok_click(answer.get(), column, selected_id)
+
+    def on_ok_click(self, new_text, column, selected_id):
+        column_index = int(column[1:])-1
+        if column_index == -1:
+            self.item(selected_id, text=new_text)
+        else :
+            current_values = self.item(selected_id).get("values")
+            current_values[column_index] = new_text
+            self.item(selected_id, values=current_values)
+        if self.update_function:
+            self.update_function()
+
+class BetterTreeView(PopUpTreeview):
 
     def __init__(self, parent, rows, *args, **kwargs):
         self.frame = ttk.Frame(parent)
@@ -163,3 +229,19 @@ class BetterTreeView(TreeviewEdit):
         # Add delete button
         add_button = ttk.Button(buttons_frame, text='-', command= self.on_delete_pressed)
         add_button.pack(fill='x', expand=False)
+
+class PandasTreeView(BetterTreeView):
+
+    def __init__(self, parent, dataframe, *args, **kwargs):
+        columns = list(dataframe.columns)
+        if 'Date' in columns :
+            dataframe.sort_values(by='Date', ascending = False, inplace = True)
+        rows = dataframe.to_numpy().tolist()
+        super().__init__(parent, rows, *args, columns=columns, **kwargs)
+
+    def get_dataframe(self):
+        headings = self['columns']
+        rows =[]
+        for row_id in self.get_children():
+            rows.append(self.item(row_id)['values'])
+        return make_df(headings, rows)

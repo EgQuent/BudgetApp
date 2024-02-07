@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesno
-from customTk import BetterLabel, AmountVar, BetterTreeView
+from customTk import BetterLabel, AmountVar, BetterTreeView, PandasTreeView
 from datetime import datetime
 
 class BasicView(ttk.Frame):
@@ -56,6 +56,11 @@ class MainView(BasicView):
         self.page = SavingsView(self, "Savings")
         self.controller.request_savings_view(self.page)
 
+    def request_cars_view(self):
+        self.save_current()
+        self.page = CarsView(self, "Cars")
+        self.controller.request_cars_view(self.page)
+
 
 class Menu(BasicView):
 
@@ -70,15 +75,28 @@ class Menu(BasicView):
                 savings_button = ttk.Button(self,text='Epargnes', command=self.parent.request_savings_view)
                 savings_button.pack(expand=False, fill="x")
                 buttons.remove('Savings')
+            elif "Cars" in buttons:
+                savings_button = ttk.Button(self,text='Voitures', command=self.parent.request_cars_view)
+                savings_button.pack(expand=False, fill="x")
+                buttons.remove('Cars')
         ttk.Label(self, background="grey").pack(expand=True, fill="both")
 
 class BasicPage(BasicView):
     
     def __init__(self, parent, title):
         super().__init__(parent)
-        self.title = tk.Label(self, text=self.titled(title))
+        self.title = title
         self.modified = False
-        self.grid(row=0,column=1,sticky="nsew")   
+        self.grid(row=0,column=1,sticky="nsew")
+        self.init_layout()
+
+    def init_layout(self):
+        self.columnconfigure(0, weight=1, uniform='b')
+        self.rowconfigure(0, weight=1, uniform='c')
+        self.rowconfigure(1, weight=19, uniform='c')
+
+        title_label = tk.Label(self, text=self.titled(self.title))
+        title_label.grid(row=0, column=0, sticky="nsew")
 
     @staticmethod
     def titled(title):
@@ -105,7 +123,6 @@ class SimpleTreeView(BasicPage):
         super().__init__(parent, title)
         self.tree = None
         self.total_treeview = AmountVar(self, "- €")
-        self.init_layout()
 
     def init_layout(self):
         self.columnconfigure(0, weight=18, uniform='b')
@@ -113,20 +130,19 @@ class SimpleTreeView(BasicPage):
         self.rowconfigure(1, weight=18, uniform='c')
         self.rowconfigure(2, weight=1, uniform='c')
 
-        self.title.grid(row=0, column=0, sticky="nsew")
-
-  
+        title_label = tk.Label(self, text=self.titled(self.title))
+        title_label.grid(row=0, column=0, columnspan=3, sticky="nsew")
 
     def load_view(self, columns, rows):
         self.tree = BetterTreeView(self, rows, columns=columns, show='headings')
         self.tree.grid(row=1, column=0, sticky="nsew")
 
+        self.tree.set_update_function(self.updated_view)
+        self.tree.add = self.add_incomes
+
         # Add total at the end
         total_label = BetterLabel(self, "Total :", self.total_treeview, "€")
         total_label.grid(row=2, column=0, sticky="nse")
-
-        self.tree.set_update_function(self.updated_view)
-        self.tree.add = self.add_incomes
 
     def add_incomes(self):
         today = datetime.today().strftime("%d/%m/%Y")
@@ -183,47 +199,122 @@ class SavingsView(SimpleTreeView):
         balance_label = BetterLabel(balance_frame, "Balance :", self.balance, "€")
         balance_label.pack(fill='x', expand=False)
 
+class NotebookView(BasicPage):
 
-
-class Page(ttk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.grid(row=0,column=1,sticky="nsew")
-        ttk.Label(self, background="blue").pack(expand=True, fill="both")
-        # Create a Notebook (tabbed layout)
+    def __init__(self, parent, title: str):
+        super().__init__(parent, title)
         self.notebook = ttk.Notebook(self)
+        self.tabs = []
+        self.args = {}
 
-        # Create and add tabs
-        self.tab1 = ttk.Frame(self.notebook)
-        self.tab2 = ttk.Frame(self.notebook)
-        self.tab3 = ttk.Frame(self.notebook)
+    def init_args(self, tabs_dict: dict):
+        self.tabs_keys = list(tabs_dict.keys())
+        self.tabs_names = []
+        for key in self.tabs_keys:
+            self.tabs_names.append([str(key), tabs_dict[key]['name']])
 
-        self.notebook.add(self.tab1, text="Tab 1")
-        self.notebook.add(self.tab2, text="Tab 2")
-        self.notebook.add(self.tab3, text="Tab 3")
+    def load_view(self):
+        for tab_name in self.tabs_names:
+            crt_tab = ttk.Frame(self.notebook)
+            crt_tab.key = tab_name[0]
+            self.notebook.add(crt_tab, text=tab_name[1])
+            self.tabs.append(crt_tab)
+        self.notebook.grid(row=1,column=0, sticky="nsew")
 
-        # Pack the notebook to make it visible
-        self.notebook.pack(fill='both', expand=True)
 
-        # Add content to the tabs (you can customize this)
-        self.create_tab1_content()
-        self.create_tab2_content()
-        self.create_tab3_content()
+class CarsView(NotebookView):
 
-    def create_tab1_content(self):
-        label = ttk.Label(self.tab1, text="Content for Tab 1")
-        label.pack(padx=10, pady=10)
+    CHOICES = ["Achat", "Maintenance"]
 
-        # Add more widgets as needed
+    def init_args(self, tabs_dict: dict):
+        super().init_args(tabs_dict)
+        for tab_key in self.tabs_keys:
+            self.args[str(tab_key)] = {}
+            self.args[str(tab_key)]['buy_kms'] = tk.IntVar()
+            self.args[str(tab_key)]['max_kms'] = tk.IntVar(value=220000)
+            self.args[str(tab_key)]['crt_kms'] = tk.IntVar()
+            self.args[str(tab_key)]['pb_kms'] = tk.IntVar()
+            self.args[str(tab_key)]['remaining_months'] = tk.IntVar()
 
-    def create_tab2_content(self):
-        label = ttk.Label(self.tab2, text="Content for Tab 2")
-        label.pack(padx=10, pady=10)
+            self.args[str(tab_key)]['total_buy'] = tk.DoubleVar()
+            self.args[str(tab_key)]['coeff_rebuy'] = tk.DoubleVar()
+            self.args[str(tab_key)]['jackpot_rebuy'] = tk.DoubleVar()
+            self.args[str(tab_key)]['monthly_rebuy'] = tk.DoubleVar()
 
-        # Add more widgets as needed
+            self.args[str(tab_key)]['total_yearly_maint'] = tk.DoubleVar()
+            self.args[str(tab_key)]['total_thisyear_maint'] = tk.DoubleVar()
+            self.args[str(tab_key)]['coeff_maint'] = tk.DoubleVar()
+            self.args[str(tab_key)]['jackpot_maint'] = tk.DoubleVar()
+            self.args[str(tab_key)]['monthly_maint'] = tk.DoubleVar()
 
-    def create_tab3_content(self):
-        label = ttk.Label(self.tab3, text="Content for Tab 3")
-        label.pack(padx=10, pady=10)
+    
+    def load_view(self, cars_tables: dict):
+        super().load_view()
+        for tab in self.tabs:
+            tab.columnconfigure(0, weight=12, uniform='e')
+            tab.columnconfigure(1, weight=8, uniform='e')
+            tab.rowconfigure(0, weight=1, uniform='f')
+            tab.rowconfigure(1, weight=1, uniform='f')
 
-        # Add more widgets as needed
+            cost_df = cars_tables[tab.key]['cost']
+            kms_df = cars_tables[tab.key]['kms']
+
+            tab.tree_expense = PandasTreeView(tab, dataframe=cost_df, show='headings')
+            tab.tree_expense.grid(row=0, column=0, sticky="nsew")
+            tab.tree_expense.set_update_function(self.updated_view)
+            # tree_expense.add = self.add_expense
+
+            tab.tree_kms = PandasTreeView(tab, dataframe=kms_df, show='headings')
+            tab.tree_expense.set_choices(self.CHOICES, 4)
+            tab.tree_kms.grid(row=1, column=0, sticky="nsew")
+            tab.tree_kms.set_update_function(self.updated_view)
+
+            box = ttk.Frame(tab)
+
+            # KMS
+            ttk.Label(box, text="--- Kilométrage ---").pack(fill='x', expand=False)
+            buy_kms_label = BetterLabel(box, "Kms à l'achat :", self.args[tab.key]['buy_kms'], " (km)")
+            buy_kms_label.pack(fill='x', expand=False)
+            max_kms_label = BetterLabel(box, "Max kms :", self.args[tab.key]['max_kms'], " (km)")
+            max_kms_label.pack(fill='x', expand=False)
+            crt_kms_label = BetterLabel(box, "Kms actuels :", self.args[tab.key]['crt_kms'], " (km)")
+            crt_kms_label.pack(fill='x', expand=False)
+            self.args[tab.key]['pb_kms'].set(int(self.args[tab.key]['crt_kms'].get()/self.args[tab.key]['max_kms'].get()*100))
+            pb = ttk.Progressbar(box,orient='horizontal',mode='determinate', variable=self.args[tab.key]['pb_kms'])
+            pb.pack(fill='x', expand=False)
+            remaining_days = BetterLabel(box, "Mois restants :", self.args[str(tab.key)]['remaining_months'], " (m)")
+            remaining_days.pack(fill='x', expand=False)
+            
+            # REBUY
+            ttk.Label(box, text="--- Amortissement ---").pack(fill='x', expand=False)
+            buy_cost = BetterLabel(box, "Total d'achat :", self.args[str(tab.key)]['total_buy'], " (€)")
+            buy_cost.pack(fill='x', expand=False)
+            rebuy_coeff = BetterLabel(box, "Coeff. de sécurité :", self.args[str(tab.key)]['coeff_rebuy'], "")
+            rebuy_coeff.pack(fill='x', expand=False)
+            rebuy_jackpot = BetterLabel(box, "Cagnotte d'achat :", self.args[str(tab.key)]['jackpot_rebuy'], " (km)")
+            rebuy_jackpot.pack(fill='x', expand=False)
+            monthly_rebuy = BetterLabel(box, "Epargne :", self.args[str(tab.key)]['monthly_rebuy'], " (€/mois) ")
+            monthly_rebuy.pack(fill='x', expand=False)
+            
+            # MAINTENANCE
+            ttk.Label(box, text="--- Maintenance ---").pack(fill='x', expand=False)
+            tym = BetterLabel(box, "Cout moy. :", self.args[str(tab.key)]['total_yearly_maint'], " (€/an)")
+            tym.pack(fill='x', expand=False)
+            ttym = BetterLabel(box, "Cout cette année :", self.args[str(tab.key)]['total_thisyear_maint'], " (€)")
+            ttym.pack(fill='x', expand=False)
+            maint_coeff = BetterLabel(box, "Coeff. de sécurité :", self.args[str(tab.key)]['coeff_maint'], "")
+            maint_coeff.pack(fill='x', expand=False)
+            maint_jackpot = BetterLabel(box, "Cagnotte maint. :", self.args[str(tab.key)]['jackpot_maint'], " (€)")
+            maint_jackpot.pack(fill='x', expand=False)
+            monthly_maint = BetterLabel(box, "Epargne :", self.args[str(tab.key)]['monthly_maint'], " (€/mois) ")
+            monthly_maint.pack(fill='x', expand=False)
+
+            box.grid(row=0, column=1, rowspan=2, sticky="nsew")
+
+    def add_expense(self):
+        today = datetime.today().strftime("%d/%m/%Y")
+        self.tree.insert('', 0, values=[today, "???", 0.0])
+    
+    def add_kms(self):
+        today = datetime.today().strftime("%d/%m/%Y")
+        self.tree.insert('', 0, values=[today, "???", 0.0])
